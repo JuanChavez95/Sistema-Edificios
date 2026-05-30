@@ -9,10 +9,10 @@
   <style>
     body { background:#121212; color:#f0f0f0; font-family:sans-serif; }
     .card { background:#1e1e1e; border:2px solid #333; }
-    .form-control, .form-select {
+    .form-control {
       background:#2a2a2a !important; border:1px solid #444 !important; color:#f0f0f0 !important;
     }
-    .form-control:focus, .form-select:focus {
+    .form-control:focus {
       border-color:#7c3aed !important; box-shadow:0 0 0 2px rgba(124,58,237,.25) !important;
     }
     .form-control::placeholder { color:#666 !important; }
@@ -30,11 +30,12 @@
     #preview-img { max-height:130px; border-radius:8px; border:1px solid #444; display:none; margin-top:.5rem; }
     #toast {
       position:fixed; top:1.5rem; left:50%; transform:translateX(-50%);
-      z-index:9999; min-width:300px; display:none;
-      background:#0f2a1a; border:1px solid rgba(34,197,94,.3);
-      color:#86efac; border-radius:10px; padding:1rem 1.4rem;
-      font-size:.9rem; text-align:center; box-shadow:0 8px 30px rgba(0,0,0,.5);
+      z-index:9999; min-width:300px; display:none; border-radius:10px;
+      padding:1rem 1.4rem; font-size:.9rem; text-align:center;
+      box-shadow:0 8px 30px rgba(0,0,0,.5);
     }
+    #toast.ok    { background:#0f2a1a; border:1px solid rgba(34,197,94,.3); color:#86efac; }
+    #toast.error { background:#2a0f0f; border:1px solid rgba(239,68,68,.3);  color:#fca5a5; }
   </style>
 </head>
 <body>
@@ -48,171 +49,207 @@
 <div id="toast"></div>
 
 <div class="container py-4" style="max-width:520px;">
-  <div class="card p-4">
 
-    <h6 style="color:#c4b5fd;" class="mb-3"><i class="bi bi-receipt me-1"></i>Datos del inquilino</h6>
-
+  <!-- PASO 1: Verificar -->
+  <div class="card p-4 mb-3" id="paso1">
+    <h6 style="color:#c4b5fd;" class="mb-3"><i class="bi bi-person-badge me-1"></i>Paso 1 — Verificar identidad</h6>
     <div class="mb-3">
       <label class="form-label">Departamento</label>
-      <input type="text" class="form-control" id="departamento" placeholder="Ej: 201, 3B…" required>
-      <div id="erDepto" style="font-size:.78rem; color:#f87171; display:none;">Ingresa el departamento.</div>
+      <input type="text" class="form-control" id="inputDepto" placeholder="Ej: 201, 3B…">
+      <div id="erDepto" style="font-size:.78rem;color:#f87171;display:none;"></div>
     </div>
-
     <div class="mb-3">
       <label class="form-label">Carnet de Identidad (CI)</label>
-      <input type="text" class="form-control" id="ci" placeholder="Ej: 7854321">
+      <input type="text" class="form-control" id="inputCI" placeholder="Ej: 7854321">
+      <div id="erCI" style="font-size:.78rem;color:#f87171;display:none;"></div>
     </div>
+    <button class="btn btn-morado w-100" id="btnVerificar" onclick="verificar()">
+      <span id="vText"><i class="bi bi-shield-check me-1"></i>Verificar</span>
+      <span id="vLoad" style="display:none;"><span class="spinner-border spinner-border-sm me-1"></span>Verificando…</span>
+    </button>
+  </div>
 
+  <!-- PASO 2: Subir comprobante -->
+  <div class="card p-4" id="paso2" style="display:none;">
+    <div class="alert mb-3 py-2 px-3" style="background:#1a2e1a;border:1px solid rgba(34,197,94,.3);color:#86efac;font-size:.85rem;">
+      <i class="bi bi-patch-check-fill me-1"></i>
+      Verificado: <strong id="nombreVerificado"></strong> — Depto <strong id="deptoVerificado"></strong>
+    </div>
+    <h6 style="color:#c4b5fd;" class="mb-3"><i class="bi bi-receipt me-1"></i>Paso 2 — Subir comprobante</h6>
     <div class="mb-3">
-      <label class="form-label" style="color:#c4b5fd;"><i class="bi bi-upload me-1"></i>Comprobante de pago</label>
       <div class="upload-area" id="uploadArea">
         <input type="file" id="comprobante" accept="image/*,application/pdf" onchange="handleFile(this)">
-        <i class="bi bi-cloud-arrow-up" style="font-size:1.8rem; color:#7c3aed;"></i>
+        <i class="bi bi-cloud-arrow-up" style="font-size:1.8rem;color:#7c3aed;"></i>
         <p class="mt-1 mb-0">Haz clic o arrastra tu archivo</p>
-        <p style="font-size:.72rem; color:#666; margin:0;">JPG, PNG, PDF — máx. 10MB</p>
+        <p style="font-size:.72rem;color:#666;margin:0;">JPG, PNG, PDF — máx. 10MB</p>
       </div>
       <img id="preview-img" src="" alt="Vista previa">
-      <div id="filenameLabel" style="font-size:.78rem; color:#6ee7b7; margin-top:.4rem; display:none;"></div>
-      <div id="uploadStatus" style="font-size:.78rem; color:#a78bfa; margin-top:.4rem; display:none;"></div>
-      <div id="fileError" style="font-size:.78rem; color:#f87171; display:none;">Sube el comprobante.</div>
+      <div id="filenameLabel" style="font-size:.78rem;color:#6ee7b7;margin-top:.4rem;display:none;"></div>
+      <div id="uploadStatus" style="font-size:.78rem;color:#a78bfa;margin-top:.4rem;display:none;"></div>
+      <div id="fileError" style="font-size:.78rem;color:#f87171;display:none;">Sube el comprobante.</div>
     </div>
-
-    <button class="btn btn-morado w-100" id="btnEnviar" onclick="validarYEnviar()">
-      <span id="btnText"><i class="bi bi-send me-1"></i>Enviar comprobante</span>
-      <span id="btnLoading" style="display:none;">
-        <span class="spinner-border spinner-border-sm me-1"></span>Enviando…
-      </span>
-    </button>
-
+    <div class="d-flex gap-2">
+      <button class="btn btn-outline-secondary" onclick="volver()"><i class="bi bi-arrow-left"></i> Volver</button>
+      <button class="btn btn-morado flex-fill" id="btnEnviar" onclick="enviar()">
+        <span id="eText"><i class="bi bi-send me-1"></i>Enviar comprobante</span>
+        <span id="eLoad" style="display:none;"><span class="spinner-border spinner-border-sm me-1"></span>Enviando…</span>
+      </button>
+    </div>
   </div>
+
 </div>
+
+<iframe name="hidden_iframe" style="display:none;"></iframe>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-  const GAS_URL       = 'https://script.google.com/macros/s/AKfycbzJZReANJd6X8qYKzyEt6gL3XZcZ22KhBDXRsjXOxAa1PYYw-W9qVTTkvxlAUPiQNQ/exec';
-  const CLD_URL       = 'https://api.cloudinary.com/v1_1/dpfoul2dc/upload';
-  const CLD_PRESET    = 'Unsigned';
+  const GAS_URL    = 'https://script.google.com/macros/s/AKfycbzJZReANJd6X8qYKzyEt6gL3XZcZ22KhBDXRsjXOxAa1PYYw-W9qVTTkvxlAUPiQNQ/exec';
+  const CLD_URL    = 'https://api.cloudinary.com/v1_1/dpfoul2dc/upload';
+  const CLD_PRESET = 'Unsigned';
 
+  let deptoOk = '', nombreOk = '';
+
+  // ── Paso 1: Verificar ──────────────────────────────────────────────
+  async function verificar() {
+    const depto = document.getElementById('inputDepto').value.trim();
+    const ci    = document.getElementById('inputCI').value.trim();
+    er('erDepto',''); er('erCI','');
+
+    if (!depto) { er('erDepto','Ingresa el departamento.'); return; }
+    if (!ci)    { er('erCI',   'Ingresa tu CI.');           return; }
+
+    setLoad('btnVerificar','vText','vLoad', true);
+
+    let data;
+    try {
+      const res = await fetch(GAS_URL);
+      data = await res.json();
+    } catch(e) {
+      toast('error','❌ Error de conexión con el servidor.'); 
+      setLoad('btnVerificar','vText','vLoad', false); return;
+    }
+
+    // Buscar fila por departamento (clave del objeto)
+    const fila = data[depto] || data[depto.toUpperCase()] ||
+      Object.entries(data).find(([k]) => k.toLowerCase() === depto.toLowerCase())?.[1];
+
+    if (!fila) {
+      er('erDepto','Departamento no encontrado.');
+      setLoad('btnVerificar','vText','vLoad', false); return;
+    }
+
+    // Verificar CI
+    if (fila.carnet && fila.carnet !== ci) {
+      er('erCI','CI incorrecto.');
+      setLoad('btnVerificar','vText','vLoad', false); return;
+    }
+
+    // OK
+    deptoOk  = depto;
+    nombreOk = fila.inquilino || 'Inquilino';
+    document.getElementById('nombreVerificado').textContent = nombreOk;
+    document.getElementById('deptoVerificado').textContent  = deptoOk;
+    setLoad('btnVerificar','vText','vLoad', false);
+    document.getElementById('paso1').style.display = 'none';
+    document.getElementById('paso2').style.display = '';
+  }
+
+  function volver() {
+    document.getElementById('paso2').style.display = 'none';
+    document.getElementById('paso1').style.display = '';
+  }
+
+  // ── Paso 2: Subir ──────────────────────────────────────────────────
   function handleFile(input) {
     const file = input.files[0];
     if (!file) return;
-    if (file.size > 10 * 1024 * 1024) {
-      document.getElementById('fileError').textContent = 'El archivo supera 10MB.';
-      document.getElementById('fileError').style.display = 'block';
-      input.value = ''; return;
+    if (file.size > 10*1024*1024) {
+      er('fileError','El archivo supera 10MB.'); input.value=''; return;
     }
-    document.getElementById('fileError').style.display = 'none';
+    er('fileError','');
     document.getElementById('filenameLabel').textContent = '✔ ' + file.name;
     document.getElementById('filenameLabel').style.display = 'block';
     if (file.type.startsWith('image/')) {
       const r = new FileReader();
-      r.onload = e => { const img = document.getElementById('preview-img'); img.src = e.target.result; img.style.display = 'block'; };
+      r.onload = e => { const img=document.getElementById('preview-img'); img.src=e.target.result; img.style.display='block'; };
       r.readAsDataURL(file);
     }
   }
 
-  // Drag & drop
   const ua = document.getElementById('uploadArea');
-  ua.addEventListener('dragover',  e => { e.preventDefault(); ua.style.borderColor = '#7c3aed'; });
-  ua.addEventListener('dragleave', () => { ua.style.borderColor = '#444'; });
+  ua.addEventListener('dragover',  e => { e.preventDefault(); ua.style.borderColor='#7c3aed'; });
+  ua.addEventListener('dragleave', () => { ua.style.borderColor='#444'; });
   ua.addEventListener('drop', e => {
-    e.preventDefault(); ua.style.borderColor = '#444';
-    const fi = document.getElementById('comprobante');
-    fi.files = e.dataTransfer.files; handleFile(fi);
+    e.preventDefault(); ua.style.borderColor='#444';
+    const fi=document.getElementById('comprobante'); fi.files=e.dataTransfer.files; handleFile(fi);
   });
 
-  async function subirACloudinary(file) {
-    const fd = new FormData();
-    fd.append('file', file);
-    fd.append('upload_preset', CLD_PRESET);
-    fd.append('folder', 'comprobantes');
-    const res  = await fetch(CLD_URL, { method: 'POST', body: fd });
-    const data = await res.json();
-    if (data.secure_url) return data.secure_url;
-    throw new Error('Cloudinary: ' + JSON.stringify(data));
-  }
+  async function enviar() {
+    const fi = document.getElementById('comprobante');
+    if (!fi.files.length) { er('fileError','Sube el comprobante.'); return; }
 
-  async function validarYEnviar() {
-    const depto = document.getElementById('departamento').value.trim();
-    const fi    = document.getElementById('comprobante');
-
-    // Validación mínima
-    if (!depto) {
-      document.getElementById('erDepto').style.display = 'block'; return;
-    }
-    document.getElementById('erDepto').style.display = 'none';
-    if (!fi.files.length) {
-      document.getElementById('fileError').textContent = 'Sube el comprobante.';
-      document.getElementById('fileError').style.display = 'block'; return;
-    }
-
-    setBtnLoading(true);
+    setLoad('btnEnviar','eText','eLoad', true);
 
     // 1. Subir a Cloudinary
-    let urlComprobante = '';
+    let urlComprobante;
     try {
       document.getElementById('uploadStatus').textContent = '⏳ Subiendo comprobante…';
       document.getElementById('uploadStatus').style.display = 'block';
-      urlComprobante = await subirACloudinary(fi.files[0]);
+      const fd = new FormData();
+      fd.append('file', fi.files[0]);
+      fd.append('upload_preset', CLD_PRESET);
+      fd.append('folder', 'comprobantes');
+      const res  = await fetch(CLD_URL, { method:'POST', body:fd });
+      const data = await res.json();
+      if (!data.secure_url) throw new Error();
+      urlComprobante = data.secure_url;
       document.getElementById('uploadStatus').textContent = '✔ Comprobante subido';
-    } catch (err) {
+    } catch(e) {
       document.getElementById('uploadStatus').textContent = '⚠️ Error al subir. Intenta de nuevo.';
-      setBtnLoading(false); return;
+      setLoad('btnEnviar','eText','eLoad', false); return;
     }
 
-    // 2. Enviar al Apps Script — mismo patrón que el formulario de reservas
+    // 2. Enviar al Apps Script via form oculto (sin CORS)
     const form = document.createElement('form');
     form.method = 'POST';
     form.action = GAS_URL;
-    form.target = 'hidden_iframe'; // evita redirección
-
-    const campos = {
-      accion:         'subirComprobante',
-      departamento:   depto,
-      urlComprobante: urlComprobante
-    };
-    for (const [k, v] of Object.entries(campos)) {
-      const inp = document.createElement('input');
-      inp.type = 'hidden'; inp.name = k; inp.value = v;
-      form.appendChild(inp);
-    }
+    form.target = 'hidden_iframe';
+    [['accion','subirComprobante'],['departamento',deptoOk],['urlComprobante',urlComprobante]]
+      .forEach(([k,v]) => { const i=document.createElement('input'); i.type='hidden'; i.name=k; i.value=v; form.appendChild(i); });
     document.body.appendChild(form);
     form.submit();
     document.body.removeChild(form);
 
-    // 3. Mostrar éxito sin redirigir
     setTimeout(() => {
-      setBtnLoading(false);
-      mostrarToast('✅ Comprobante enviado correctamente. Será revisado por la administración.');
-      resetForm();
+      setLoad('btnEnviar','eText','eLoad', false);
+      toast('ok','✅ Comprobante enviado correctamente. Será revisado por la administración.');
+      // Reset
+      document.getElementById('comprobante').value = '';
+      document.getElementById('preview-img').style.display = 'none';
+      document.getElementById('filenameLabel').style.display = 'none';
+      document.getElementById('uploadStatus').style.display = 'none';
+      document.getElementById('paso2').style.display = 'none';
+      document.getElementById('inputDepto').value = '';
+      document.getElementById('inputCI').value = '';
+      document.getElementById('paso1').style.display = '';
     }, 1500);
   }
 
-  function setBtnLoading(on) {
-    document.getElementById('btnEnviar').disabled       = on;
-    document.getElementById('btnText').style.display    = on ? 'none'   : 'inline';
-    document.getElementById('btnLoading').style.display = on ? 'inline' : 'none';
+  // ── Helpers ────────────────────────────────────────────────────────
+  function er(id, msg) {
+    const el = document.getElementById(id);
+    el.textContent = msg; el.style.display = msg ? 'block' : 'none';
   }
-
-  function mostrarToast(msg) {
+  function setLoad(btn, txtId, ldId, on) {
+    document.getElementById(btn).disabled           = on;
+    document.getElementById(txtId).style.display    = on ? 'none'   : 'inline';
+    document.getElementById(ldId).style.display     = on ? 'inline' : 'none';
+  }
+  function toast(type, msg) {
     const t = document.getElementById('toast');
-    t.textContent = msg; t.style.display = 'block';
+    t.className = type; t.textContent = msg; t.style.display = 'block';
     setTimeout(() => { t.style.display = 'none'; }, 6000);
   }
-
-  function resetForm() {
-    document.getElementById('departamento').value = '';
-    document.getElementById('ci').value           = '';
-    document.getElementById('comprobante').value  = '';
-    document.getElementById('preview-img').style.display = 'none';
-    document.getElementById('preview-img').src    = '';
-    document.getElementById('filenameLabel').style.display  = 'none';
-    document.getElementById('uploadStatus').style.display   = 'none';
-  }
 </script>
-
-<!-- iframe oculto para capturar la respuesta del Apps Script sin redirigir -->
-<iframe name="hidden_iframe" style="display:none;"></iframe>
-
 </body>
 </html>
