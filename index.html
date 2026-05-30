@@ -636,9 +636,7 @@
 <script>
 // ── CONSTANTES ──────────────────────────────────────────────────────────────
 const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzJZReANJd6X8qYKzyEt6gL3XZcZ22KhBDXRsjXOxAa1PYYw-W9qVTTkvxlAUPiQNQ/exec";
-const CLOUDINARY_CLOUD = "dpfoul2dc";
-const CLOUDINARY_PRESET = "ml_default"; // Cambiar al nombre real de tu Upload Preset Unsigned
-const CLOUDINARY_URL = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/upload`;
+const CLOUDINARY_URL  = "https://api.cloudinary.com/v1_1/dpfoul2dc/upload";
 
 let BD = {};
 let deptoActivo = null;
@@ -799,43 +797,29 @@ async function procesarComprobante() {
     alert('Por favor selecciona un archivo.');
     return;
   }
-  const file = fileInput.files[0];
-  const MAX_MB = 10;
-  if (file.size > MAX_MB * 1024 * 1024) {
-    alert(`El archivo supera ${MAX_MB}MB. Selecciona una imagen más pequeña.`);
-    return;
-  }
 
-  const btn = document.getElementById('btnEnviarComp');
+  const btn  = document.getElementById('btnEnviarComp');
   const prog = document.getElementById('uploadProgress');
   btn.disabled = true;
   prog.style.display = 'flex';
 
   try {
-    // 1. Subir a Cloudinary
+    // 1. Crear FormData con file y upload_preset únicamente
     const formData = new FormData();
-    formData.append('file', file);
-    formData.append('upload_preset', CLOUDINARY_PRESET);
-    formData.append('folder', 'edificios_bd');
+    formData.append('file', fileInput.files[0]);
+    formData.append('upload_preset', 'ml_default');
 
+    // 2. fetch() solo hacia Cloudinary
     const res = await fetch(CLOUDINARY_URL, { method: 'POST', body: formData });
-    if (!res.ok) throw new Error(`Cloudinary respondió ${res.status}`);
     const json = await res.json();
     const secureUrl = json.secure_url;
-    if (!secureUrl) throw new Error('Cloudinary no devolvió URL segura.');
+    if (!secureUrl) throw new Error('Cloudinary no devolvió secure_url.');
 
-    // 2. Guardar URL en campo oculto
+    // 3. Guardar secure_url en input hidden
     document.getElementById('f_urlComp').value = secureUrl;
 
-    // 3. Enviar formulario al Apps Script
-    prog.querySelector('span').textContent = 'Guardando en registro…';
+    // 4. form.submit() — envía el formulario real al Apps Script
     document.getElementById('formComp').submit();
-
-    prog.style.display = 'none';
-    cerrarModal();
-
-    // Refrescar datos tras breve espera
-    setTimeout(sincronizar, 3000);
 
   } catch (err) {
     prog.style.display = 'none';
