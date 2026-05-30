@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EdificiosBD — Panel de Control</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:        #0e0e12;
+    --surface:   #16161d;
+    --surface2:  #1e1e28;
+    --border:    #2a2a38;
+    --purple:    #7c3aed;
+    --purple-l:  #9d5ff5;
+    --purple-dim:#3b1f6e;
+    --green:     #16a34a;
+    --green-l:   #22c55e;
+    --red:       #b91c1c;
+    --red-l:     #ef4444;
+    --text:      #f0f0f5;
+    --text-muted:#8b8ba0;
+    --text-dim:  #55556a;
+    --mono:      'DM Mono', monospace;
+    --sans:      'DM Sans', sans-serif;
+    --display:   'Syne', sans-serif;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    min-height: 100vh;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  /* ── TOPBAR ── */
+  .topbar {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .topbar-brand {
+    font-family: var(--display);
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: var(--text);
+    letter-spacing: -0.02em;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .topbar-brand .brand-icon {
+    width: 30px; height: 30px;
+    background: var(--purple);
+    border-radius: 8px;
+    display: grid; place-items: center;
+    font-size: 15px;
+  }
+  .topbar-right { display: flex; align-items: center; gap: 10px; }
+
+  .btn-sync {
+    background: var(--purple);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 18px;
+    font-family: var(--sans);
+    font-weight: 500;
+    font-size: 13px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: background .15s;
+  }
+  .btn-sync:hover { background: var(--purple-l); }
+  .btn-sync:disabled { opacity: .5; cursor: not-allowed; }
+
+  .sync-spinner {
+    width: 14px; height: 14px;
+    border: 2px solid rgba(255,255,255,.3);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin .6s linear infinite;
+    display: none;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── LAYOUT ── */
+  .layout {
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: 20px;
+    padding: 20px 24px;
+    max-width: 1280px;
+    margin: 0 auto;
+  }
+
+  @media (max-width: 900px) {
+    .layout { grid-template-columns: 1fr; }
+  }
+
+  /* ── BANNER ── */
+  .banner {
+    margin: 12px 24px 0;
+    max-width: 1280px;
+    margin-left: auto;
+    margin-right: auto;
+    padding: 0 24px;
+  }
+  .alert {
+    border-radius: 10px;
+    padding: 10px 16px;
+    font-size: 13px;
+    font-weight: 500;
+    display: none;
+    align-items: center;
+    gap: 8px;
+  }
+  .alert-warn { background: #2d1f00; border: 1px solid #7c4d00; color: #f9b800; }
+  .alert-err  { background: #2d0a0a; border: 1px solid #7c1c1c; color: #f87171; }
+
+  /* ── PANEL EDIFICIO ── */
+  .panel-edificio {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+  }
+  .panel-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .panel-title {
+    font-family: var(--display);
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--text);
+  }
+  .legend { display: flex; gap: 12px; }
+  .legend-item {
+    display: flex; align-items: center; gap: 5px;
+    font-size: 11px; color: var(--text-muted);
+    font-family: var(--mono);
+  }
+  .legend-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+  }
+  .legend-dot.green { background: var(--green-l); }
+  .legend-dot.red   { background: var(--red-l); }
+
+  .pisos-container { padding: 16px 20px; }
+
+  .piso-row {
+    display: grid;
+    grid-template-columns: 56px 1fr;
+    align-items: center;
+    gap: 12px;
+    padding: 5px 0;
+  }
+  .piso-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-dim);
+    font-weight: 500;
+    text-align: right;
+  }
+  .deptos-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+  }
+  .btn-depto {
+    border: none;
+    border-radius: 7px;
+    padding: 9px 4px;
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 500;
+    color: #fff;
+    cursor: pointer;
+    transition: transform .1s, opacity .1s;
+    text-align: center;
+  }
+  .btn-depto:hover { transform: translateY(-1px); opacity: .9; }
+  .btn-depto.active { outline: 2px solid #fff; outline-offset: 1px; }
+  .btn-depto.al-dia   { background: var(--green); }
+  .btn-depto.con-deuda{ background: var(--red); }
+  .btn-depto.vacio    { background: var(--surface2); color: var(--text-dim); cursor: default; }
+
+  /* ── PANEL DETALLE ── */
+  .panel-detalle {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  .detalle-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    font-family: var(--display);
+    font-weight: 700;
+    font-size: 1rem;
+  }
+
+  .detalle-placeholder {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 24px;
+    color: var(--text-dim);
+    text-align: center;
+    gap: 10px;
+    font-size: 13px;
+  }
+  .placeholder-icon { font-size: 36px; }
+
+  .detalle-body { display: none; padding: 20px; }
+
+  .depto-hero {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+  .depto-num {
+    font-family: var(--display);
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--text);
+    line-height: 1;
+  }
+  .depto-num span { color: var(--purple-l); font-size: 1rem; font-weight: 600; }
+
+  .badge {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 500;
+    padding: 4px 10px;
+    border-radius: 20px;
+    letter-spacing: .04em;
+  }
+  .badge-green { background: #052e16; color: var(--green-l); border: 1px solid #166534; }
+  .badge-red   { background: #450a0a; color: var(--red-l);   border: 1px solid #7f1d1d; }
+
+  .field-group { margin-bottom: 16px; }
+  .field-label {
+    font-size: 10px;
+    font-family: var(--mono);
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--text-dim);
+    margin-bottom: 3px;
+  }
+  .field-value {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+  }
+
+  .conceptos-title {
+    font-size: 10px;
+    font-family: var(--mono);
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--text-dim);
+    margin-bottom: 8px;
+  }
+  .conceptos-list {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 16px;
+  }
+  .concepto-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 9px 14px;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+  }
+  .concepto-item:last-child { border-bottom: none; }
+  .concepto-name { color: var(--text-muted); }
+  .concepto-val  { font-family: var(--mono); font-weight: 500; color: var(--text); }
+  .concepto-val.zero { color: var(--text-dim); }
+
+  .total-bar {
+    background: var(--purple-dim);
+    border: 1px solid var(--purple);
+    border-radius: 10px;
+    padding: 12px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+  .total-label { font-size: 12px; font-family: var(--mono); color: var(--text-muted); }
+  .total-val   { font-family: var(--display); font-size: 1.4rem; font-weight: 800; color: #fff; }
+
+  .acciones { display: flex; flex-direction: column; gap: 8px; }
+
+  /* ── BOTONES ── */
+  .btn-wa {
+    background: #16a34a;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 11px 16px;
+    font-family: var(--sans);
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: background .15s;
+    text-decoration: none;
+  }
+  .btn-wa:hover { background: #15803d; }
+
+  .btn-upload {
+    background: var(--surface2);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 11px 16px;
+    font-family: var(--sans);
+    font-weight: 500;
+    font-size: 13px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: border-color .15s, color .15s;
+  }
+  .btn-upload:hover { border-color: var(--purple-l); color: var(--purple-l); }
+
+  /* ── MODAL COMPROBANTE ── */
+  .modal-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,.7);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px;
+    width: 100%; max-width: 420px;
+  }
+  .modal-title {
+    font-family: var(--display);
+    font-weight: 700;
+    font-size: 1.1rem;
+    margin-bottom: 20px;
+  }
+  .form-group { margin-bottom: 16px; }
+  .form-label {
+    display: block;
+    font-size: 11px;
+    font-family: var(--mono);
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--text-dim);
+    margin-bottom: 6px;
+  }
+  .form-input {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 13px;
+    padding: 10px 12px;
+    outline: none;
+    transition: border-color .15s;
+  }
+  .form-input:focus { border-color: var(--purple-l); }
+  .form-input[type="file"] { cursor: pointer; }
+
+  .upload-progress {
+    display: none;
+    align-items: center;
+    gap: 10px;
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+  }
+  .upload-progress .prog-spin {
+    width: 14px; height: 14px;
+    border: 2px solid var(--border);
+    border-top-color: var(--purple-l);
+    border-radius: 50%;
+    animation: spin .6s linear infinite;
+    flex-shrink: 0;
+  }
+
+  .modal-actions { display: flex; gap: 10px; margin-top: 20px; }
+  .btn-cancel {
+    flex: 1;
+    background: transparent;
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px;
+    font-family: var(--sans);
+    font-size: 13px;
+    cursor: pointer;
+    transition: border-color .15s;
+  }
+  .btn-cancel:hover { border-color: var(--text-muted); }
+  .btn-submit {
+    flex: 2;
+    background: var(--purple);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 10px;
+    font-family: var(--sans);
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+    transition: background .15s;
+  }
+  .btn-submit:hover { background: var(--purple-l); }
+  .btn-submit:disabled { opacity: .5; cursor: not-allowed; }
+
+  /* ── LOADER GLOBAL ── */
+  .loader-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(14,14,18,.8);
+    z-index: 300;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .loader-overlay.show { display: flex; }
+  .loader-big {
+    width: 40px; height: 40px;
+    border: 3px solid var(--border);
+    border-top-color: var(--purple-l);
+    border-radius: 50%;
+    animation: spin .7s linear infinite;
+  }
+  .loader-txt { font-size: 13px; color: var(--text-muted); }
+
+  /* ── RECIBO LINK ── */
+  .recibo-link {
+    display: none;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--purple-l);
+    text-decoration: none;
+    margin-top: 4px;
+  }
+  .recibo-link:hover { text-decoration: underline; }
+
+  /* scrollbar */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<!-- LOADER GLOBAL -->
+<div class="loader-overlay" id="loaderOverlay">
+  <div class="loader-big"></div>
+  <div class="loader-txt">Sincronizando datos…</div>
+</div>
+
+<!-- TOPBAR -->
+<header class="topbar">
+  <div class="topbar-brand">
+    <div class="brand-icon">🏢</div>
+    EdificiosBD — Panel de Control
+  </div>
+  <div class="topbar-right">
+    <button class="btn-sync" id="btnSync" onclick="sincronizar()">
+      <div class="sync-spinner" id="syncSpinner"></div>
+      <span id="syncLabel">Sincronizar</span>
+    </button>
+  </div>
+</header>
+
+<!-- BANNER -->
+<div class="banner" id="bannerWrap">
+  <div class="alert alert-warn" id="alertWarn" style="display:flex"></div>
+  <div class="alert alert-err"  id="alertErr"></div>
+</div>
+
+<!-- LAYOUT -->
+<div class="layout">
+
+  <!-- EDIFICIO -->
+  <div class="panel-edificio">
+    <div class="panel-header">
+      <div class="panel-title">Vista de Departamentos</div>
+      <div class="legend">
+        <div class="legend-item"><div class="legend-dot green"></div>Al día</div>
+        <div class="legend-item"><div class="legend-dot red"></div>Con deuda</div>
+      </div>
+    </div>
+    <div class="pisos-container" id="contenedorPisos">
+      <!-- generado por JS -->
+    </div>
+  </div>
+
+  <!-- DETALLE -->
+  <div class="panel-detalle">
+    <div class="detalle-header">Estado de Cuenta</div>
+
+    <div class="detalle-placeholder" id="detallePlaceholder">
+      <div class="placeholder-icon">🔍</div>
+      <div>Selecciona un departamento para ver su estado de cuenta.</div>
+    </div>
+
+    <div class="detalle-body" id="detalleBody">
+
+      <div class="depto-hero">
+        <div>
+          <div class="depto-num">Depto <span>N°</span> <span id="dNum"></span></div>
+        </div>
+        <div class="badge" id="dBadge"></div>
+      </div>
+
+      <div class="field-group">
+        <div class="field-label">Inquilino / Propietario</div>
+        <div class="field-value" id="dInquilino"></div>
+      </div>
+
+      <div class="conceptos-title">Desglose de cargos pendientes</div>
+      <div class="conceptos-list">
+        <div class="concepto-item"><span class="concepto-name">Alquiler base</span><span class="concepto-val" id="dAlquiler"></span></div>
+        <div class="concepto-item"><span class="concepto-name">Mantenimiento</span><span class="concepto-val" id="dMant"></span></div>
+        <div class="concepto-item"><span class="concepto-name">Limpieza</span><span class="concepto-val" id="dLimp"></span></div>
+        <div class="concepto-item"><span class="concepto-name">Seguridad</span><span class="concepto-val" id="dSeg"></span></div>
+        <div class="concepto-item"><span class="concepto-name">Agua</span><span class="concepto-val" id="dAgua"></span></div>
+        <div class="concepto-item"><span class="concepto-name">Electricidad</span><span class="concepto-val" id="dElec"></span></div>
+      </div>
+
+      <div class="total-bar">
+        <div class="total-label">Total acumulado</div>
+        <div class="total-val" id="dTotal"></div>
+      </div>
+
+      <div class="acciones">
+        <a class="btn-wa" id="btnWa" href="#" target="_blank" rel="noopener" style="display:none">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+          Enviar Recordatorio
+        </a>
+
+        <button class="btn-upload" id="btnSubirComp" onclick="abrirModal()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          Subir Comprobante de Pago
+        </button>
+
+        <a class="recibo-link" id="reciboExistente" href="#" target="_blank" rel="noopener">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          Ver comprobante existente
+        </a>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- MODAL COMPROBANTE -->
+<div class="modal-overlay" id="modalComp">
+  <div class="modal-box">
+    <div class="modal-title">📎 Subir Comprobante de Pago</div>
+
+    <!-- FORM REAL que se envía al Apps Script -->
+    <form id="formComp"
+          action="https://script.google.com/macros/s/AKfycbzJZReANJd6X8qYKzyEt6gL3XZcZ22KhBDXRsjXOxAa1PYYw-W9qVTTkvxlAUPiQNQ/exec"
+          method="POST"
+          target="_blank">
+
+      <!-- Campos ocultos poblados por JS -->
+      <input type="hidden" name="accion"      id="f_accion"      value="subirComprobante">
+      <input type="hidden" name="departamento" id="f_departamento">
+      <input type="hidden" name="urlComprobante" id="f_urlComp">
+
+      <div class="form-group">
+        <label class="form-label" for="fileInput">Imagen del comprobante</label>
+        <input class="form-input" type="file" id="fileInput" accept="image/*,application/pdf" required>
+      </div>
+
+      <div class="upload-progress" id="uploadProgress">
+        <div class="prog-spin"></div>
+        <span>Subiendo a Cloudinary…</span>
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn-cancel" onclick="cerrarModal()">Cancelar</button>
+        <button type="button" class="btn-submit" id="btnEnviarComp" onclick="procesarComprobante()">
+          Subir y Guardar
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+// ── CONSTANTES ──────────────────────────────────────────────────────────────
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzJZReANJd6X8qYKzyEt6gL3XZcZ22KhBDXRsjXOxAa1PYYw-W9qVTTkvxlAUPiQNQ/exec";
+const CLOUDINARY_CLOUD = "dpfoul2dc";
+const CLOUDINARY_PRESET = "ml_default"; // Cambiar al nombre real de tu Upload Preset Unsigned
+const CLOUDINARY_URL = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/upload`;
+
+let BD = {};
+let deptoActivo = null;
+
+// ── SINCRONIZAR ──────────────────────────────────────────────────────────────
+function sincronizar() {
+  setLoading(true);
+  ocultarAlertas();
+
+  fetch(`${APPS_SCRIPT_URL}?accion=leer&ts=${Date.now()}`)
+    .then(r => r.json())
+    .then(data => {
+      BD = data;
+      renderEdificio();
+      setLoading(false);
+    })
+    .catch(err => {
+      setLoading(false);
+      mostrarError("No se pudo conectar con el servidor. Verifica la URL del Apps Script. " + err.message);
+    });
+}
+
+// ── RENDER EDIFICIO ──────────────────────────────────────────────────────────
+function renderEdificio() {
+  const cont = document.getElementById('contenedorPisos');
+  cont.innerHTML = '';
+  for (let p = 10; p >= 1; p--) {
+    const row = document.createElement('div');
+    row.className = 'piso-row';
+
+    const lbl = document.createElement('div');
+    lbl.className = 'piso-label';
+    lbl.textContent = `P${p}`;
+    row.appendChild(lbl);
+
+    const grid = document.createElement('div');
+    grid.className = 'deptos-grid';
+
+    for (let d = 1; d <= 4; d++) {
+      const id = p === 10 ? `100${d}` : `${p}0${d}`;
+      const data = BD[id];
+
+      const btn = document.createElement('button');
+      btn.className = 'btn-depto';
+      btn.textContent = id;
+      btn.dataset.id = id;
+
+      if (!data) {
+        btn.classList.add('vacio');
+        btn.disabled = true;
+      } else if (data.estadoSheet && data.estadoSheet.trim() === 'Con deuda') {
+        btn.classList.add('con-deuda');
+        btn.onclick = () => mostrarDetalle(id);
+      } else {
+        btn.classList.add('al-dia');
+        btn.onclick = () => mostrarDetalle(id);
+      }
+
+      if (id === deptoActivo) btn.classList.add('active');
+      grid.appendChild(btn);
+    }
+
+    row.appendChild(grid);
+    cont.appendChild(row);
+  }
+}
+
+// ── MOSTRAR DETALLE ──────────────────────────────────────────────────────────
+function mostrarDetalle(id) {
+  deptoActivo = id;
+  const d = BD[id];
+  if (!d) return;
+
+  // Resaltar activo
+  document.querySelectorAll('.btn-depto').forEach(b => b.classList.remove('active'));
+  document.querySelector(`.btn-depto[data-id="${id}"]`)?.classList.add('active');
+
+  document.getElementById('detallePlaceholder').style.display = 'none';
+  document.getElementById('detalleBody').style.display = 'block';
+
+  document.getElementById('dNum').textContent = id;
+  document.getElementById('dInquilino').textContent = d.inquilino || '—';
+
+  // Badge
+  const badge = document.getElementById('dBadge');
+  const esDeudor = d.estadoSheet && d.estadoSheet.trim() === 'Con deuda';
+  badge.textContent = esDeudor ? 'Con deuda' : 'Al día';
+  badge.className = 'badge ' + (esDeudor ? 'badge-red' : 'badge-green');
+
+  // Valores
+  setConcepto('dAlquiler', d.alquiler);
+  setConcepto('dMant', d.mantenimiento);
+  setConcepto('dLimp', d.limpieza);
+  setConcepto('dSeg', d.seguridad);
+  setConcepto('dAgua', d.agua);
+  setConcepto('dElec', d.electricidad);
+
+  const total = d.totalMora || 0;
+  document.getElementById('dTotal').textContent = `${total} Bs.`;
+
+  // WhatsApp
+  const btnWa = document.getElementById('btnWa');
+  if (esDeudor && d.urlWap && d.urlWap.trim() !== '') {
+    btnWa.href = d.urlWap.trim();
+    btnWa.style.display = 'flex';
+  } else if (esDeudor) {
+    btnWa.href = '#';
+    btnWa.style.display = 'flex';
+    btnWa.onclick = (e) => {
+      e.preventDefault();
+      mostrarAviso('Este departamento no tiene URL de WhatsApp configurada (columna O vacía).');
+    };
+  } else {
+    btnWa.style.display = 'none';
+  }
+
+  // Recibo existente
+  const reciboLink = document.getElementById('reciboExistente');
+  if (d.reciboPago && d.reciboPago.trim() !== '') {
+    reciboLink.href = d.reciboPago.trim();
+    reciboLink.style.display = 'flex';
+  } else {
+    reciboLink.style.display = 'none';
+  }
+
+  document.getElementById('f_departamento').value = id;
+}
+
+function setConcepto(elId, val) {
+  const el = document.getElementById(elId);
+  if (val && val > 0) {
+    el.textContent = `${val} Bs.`;
+    el.classList.remove('zero');
+  } else {
+    el.textContent = '—';
+    el.classList.add('zero');
+  }
+}
+
+// ── MODAL COMPROBANTE ────────────────────────────────────────────────────────
+function abrirModal() {
+  if (!deptoActivo) return;
+  document.getElementById('f_departamento').value = deptoActivo;
+  document.getElementById('f_urlComp').value = '';
+  document.getElementById('fileInput').value = '';
+  document.getElementById('uploadProgress').style.display = 'none';
+  document.getElementById('btnEnviarComp').disabled = false;
+  document.getElementById('modalComp').classList.add('open');
+}
+
+function cerrarModal() {
+  document.getElementById('modalComp').classList.remove('open');
+}
+
+async function procesarComprobante() {
+  const fileInput = document.getElementById('fileInput');
+  if (!fileInput.files || fileInput.files.length === 0) {
+    alert('Por favor selecciona un archivo.');
+    return;
+  }
+  const file = fileInput.files[0];
+  const MAX_MB = 10;
+  if (file.size > MAX_MB * 1024 * 1024) {
+    alert(`El archivo supera ${MAX_MB}MB. Selecciona una imagen más pequeña.`);
+    return;
+  }
+
+  const btn = document.getElementById('btnEnviarComp');
+  const prog = document.getElementById('uploadProgress');
+  btn.disabled = true;
+  prog.style.display = 'flex';
+
+  try {
+    // 1. Subir a Cloudinary
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('upload_preset', CLOUDINARY_PRESET);
+    formData.append('folder', 'edificios_bd');
+
+    const res = await fetch(CLOUDINARY_URL, { method: 'POST', body: formData });
+    if (!res.ok) throw new Error(`Cloudinary respondió ${res.status}`);
+    const json = await res.json();
+    const secureUrl = json.secure_url;
+    if (!secureUrl) throw new Error('Cloudinary no devolvió URL segura.');
+
+    // 2. Guardar URL en campo oculto
+    document.getElementById('f_urlComp').value = secureUrl;
+
+    // 3. Enviar formulario al Apps Script
+    prog.querySelector('span').textContent = 'Guardando en registro…';
+    document.getElementById('formComp').submit();
+
+    prog.style.display = 'none';
+    cerrarModal();
+
+    // Refrescar datos tras breve espera
+    setTimeout(sincronizar, 3000);
+
+  } catch (err) {
+    prog.style.display = 'none';
+    btn.disabled = false;
+    alert('Error al subir comprobante: ' + err.message);
+  }
+}
+
+// ── HELPERS UI ───────────────────────────────────────────────────────────────
+function setLoading(on) {
+  document.getElementById('loaderOverlay').classList.toggle('show', on);
+  document.getElementById('btnSync').disabled = on;
+  const spinner = document.getElementById('syncSpinner');
+  const label   = document.getElementById('syncLabel');
+  spinner.style.display = on ? 'block' : 'none';
+  label.textContent = on ? 'Cargando…' : 'Sincronizar';
+}
+
+function ocultarAlertas() {
+  document.getElementById('alertWarn').style.display = 'none';
+  document.getElementById('alertErr').style.display  = 'none';
+}
+
+function mostrarAviso(msg) {
+  const el = document.getElementById('alertWarn');
+  el.textContent = '⚠ ' + msg;
+  el.style.display = 'flex';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function mostrarError(msg) {
+  const el = document.getElementById('alertErr');
+  el.textContent = '✕ ' + msg;
+  el.style.display = 'flex';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ── INICIO ───────────────────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', () => {
+  // Mostrar aviso inicial antes de sincronizar
+  document.getElementById('alertWarn').textContent =
+    '⚠ Si ves errores CORS, abre el Apps Script Web App directamente una vez para aceptar permisos.';
+  document.getElementById('alertWarn').style.display = 'flex';
+
+  sincronizar();
+});
+</script>
+</body>
+</html>
