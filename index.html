@@ -114,10 +114,8 @@
 
   /* ── BANNER ── */
   .banner {
-    margin: 12px 24px 0;
     max-width: 1280px;
-    margin-left: auto;
-    margin-right: auto;
+    margin: 12px auto 0;
     padding: 0 24px;
   }
   .alert {
@@ -128,9 +126,11 @@
     display: none;
     align-items: center;
     gap: 8px;
+    margin-bottom: 6px;
   }
   .alert-warn { background: #2d1f00; border: 1px solid #7c4d00; color: #f9b800; }
   .alert-err  { background: #2d0a0a; border: 1px solid #7c1c1c; color: #f87171; }
+  .alert-ok   { background: #052e16; border: 1px solid #166534; color: #4ade80; }
 
   /* ── PANEL EDIFICIO ── */
   .panel-edificio {
@@ -158,9 +158,7 @@
     font-size: 11px; color: var(--text-muted);
     font-family: var(--mono);
   }
-  .legend-dot {
-    width: 8px; height: 8px; border-radius: 50%;
-  }
+  .legend-dot { width: 8px; height: 8px; border-radius: 50%; }
   .legend-dot.green { background: var(--green-l); }
   .legend-dot.red   { background: var(--red-l); }
 
@@ -199,9 +197,9 @@
   }
   .btn-depto:hover { transform: translateY(-1px); opacity: .9; }
   .btn-depto.active { outline: 2px solid #fff; outline-offset: 1px; }
-  .btn-depto.al-dia   { background: var(--green); }
-  .btn-depto.con-deuda{ background: var(--red); }
-  .btn-depto.vacio    { background: var(--surface2); color: var(--text-dim); cursor: default; }
+  .btn-depto.al-dia    { background: var(--green); }
+  .btn-depto.con-deuda { background: var(--red); }
+  .btn-depto.vacio     { background: var(--surface2); color: var(--text-dim); cursor: default; }
 
   /* ── PANEL DETALLE ── */
   .panel-detalle {
@@ -219,7 +217,6 @@
     font-weight: 700;
     font-size: 1rem;
   }
-
   .detalle-placeholder {
     flex: 1;
     display: flex;
@@ -233,7 +230,6 @@
     font-size: 13px;
   }
   .placeholder-icon { font-size: 36px; }
-
   .detalle-body { display: none; padding: 20px; }
 
   .depto-hero {
@@ -271,11 +267,7 @@
     color: var(--text-dim);
     margin-bottom: 3px;
   }
-  .field-value {
-    font-size: 14px;
-    font-weight: 500;
-    color: var(--text);
-  }
+  .field-value { font-size: 14px; font-weight: 500; color: var(--text); }
 
   .conceptos-title {
     font-size: 10px;
@@ -320,7 +312,6 @@
 
   .acciones { display: flex; flex-direction: column; gap: 8px; }
 
-  /* ── BOTONES ── */
   .btn-wa {
     background: #16a34a;
     color: #fff;
@@ -475,7 +466,6 @@
   }
   .loader-txt { font-size: 13px; color: var(--text-muted); }
 
-  /* ── RECIBO LINK ── */
   .recibo-link {
     display: none;
     align-items: center;
@@ -487,7 +477,6 @@
   }
   .recibo-link:hover { text-decoration: underline; }
 
-  /* scrollbar */
   ::-webkit-scrollbar { width: 6px; }
   ::-webkit-scrollbar-track { background: var(--bg); }
   ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
@@ -517,7 +506,8 @@
 
 <!-- BANNER -->
 <div class="banner" id="bannerWrap">
-  <div class="alert alert-warn" id="alertWarn" style="display:flex"></div>
+  <div class="alert alert-ok"   id="alertOk"></div>
+  <div class="alert alert-warn" id="alertWarn"></div>
   <div class="alert alert-err"  id="alertErr"></div>
 </div>
 
@@ -533,9 +523,7 @@
         <div class="legend-item"><div class="legend-dot red"></div>Con deuda</div>
       </div>
     </div>
-    <div class="pisos-container" id="contenedorPisos">
-      <!-- generado por JS -->
-    </div>
+    <div class="pisos-container" id="contenedorPisos"></div>
   </div>
 
   <!-- DETALLE -->
@@ -602,15 +590,14 @@
   <div class="modal-box">
     <div class="modal-title">📎 Subir Comprobante de Pago</div>
 
-    <!-- FORM REAL que se envía al Apps Script -->
+    <!-- target apunta al iframe oculto para no redirigir la página -->
     <form id="formComp"
           action="https://script.google.com/macros/s/AKfycbzJZReANJd6X8qYKzyEt6gL3XZcZ22KhBDXRsjXOxAa1PYYw-W9qVTTkvxlAUPiQNQ/exec"
           method="POST"
-          target="_blank">
+          target="iframeOculto">
 
-      <!-- Campos ocultos poblados por JS -->
-      <input type="hidden" name="accion"      id="f_accion"      value="subirComprobante">
-      <input type="hidden" name="departamento" id="f_departamento">
+      <input type="hidden" name="accion"         id="f_accion"      value="subirComprobante">
+      <input type="hidden" name="departamento"   id="f_departamento">
       <input type="hidden" name="urlComprobante" id="f_urlComp">
 
       <div class="form-group">
@@ -633,20 +620,22 @@
   </div>
 </div>
 
+<!-- iframe oculto: absorbe la respuesta del form.submit() sin redirigir la página -->
+<iframe name="iframeOculto" style="display:none"></iframe>
+
 <script>
-// ── CONSTANTES ──────────────────────────────────────────────────────────────
 const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzJZReANJd6X8qYKzyEt6gL3XZcZ22KhBDXRsjXOxAa1PYYw-W9qVTTkvxlAUPiQNQ/exec";
 const CLOUDINARY_URL  = "https://api.cloudinary.com/v1_1/dpfoul2dc/upload";
 
 let BD = {};
 let deptoActivo = null;
 
-// ── SINCRONIZAR ──────────────────────────────────────────────────────────────
+// ── SINCRONIZAR ───────────────────────────────────────────────────────────────
 function sincronizar() {
   setLoading(true);
   ocultarAlertas();
 
-  fetch(`${APPS_SCRIPT_URL}?accion=leer&ts=${Date.now()}`)
+  fetch(APPS_SCRIPT_URL + "?accion=leer&ts=" + Date.now())
     .then(r => r.json())
     .then(data => {
       BD = data;
@@ -655,11 +644,11 @@ function sincronizar() {
     })
     .catch(err => {
       setLoading(false);
-      mostrarError("No se pudo conectar con el servidor. Verifica la URL del Apps Script. " + err.message);
+      mostrarError("No se pudo conectar con el servidor. " + err.message);
     });
 }
 
-// ── RENDER EDIFICIO ──────────────────────────────────────────────────────────
+// ── RENDER EDIFICIO ───────────────────────────────────────────────────────────
 function renderEdificio() {
   const cont = document.getElementById('contenedorPisos');
   cont.innerHTML = '';
@@ -669,20 +658,20 @@ function renderEdificio() {
 
     const lbl = document.createElement('div');
     lbl.className = 'piso-label';
-    lbl.textContent = `P${p}`;
+    lbl.textContent = 'P' + p;
     row.appendChild(lbl);
 
     const grid = document.createElement('div');
     grid.className = 'deptos-grid';
 
     for (let d = 1; d <= 4; d++) {
-      const id = p === 10 ? `100${d}` : `${p}0${d}`;
+      const id   = p === 10 ? '100' + d : p + '0' + d;
       const data = BD[id];
 
       const btn = document.createElement('button');
-      btn.className = 'btn-depto';
-      btn.textContent = id;
-      btn.dataset.id = id;
+      btn.className    = 'btn-depto';
+      btn.textContent  = id;
+      btn.dataset.id   = id;
 
       if (!data) {
         btn.classList.add('vacio');
@@ -704,51 +693,70 @@ function renderEdificio() {
   }
 }
 
-// ── MOSTRAR DETALLE ──────────────────────────────────────────────────────────
+// ── MOSTRAR DETALLE ───────────────────────────────────────────────────────────
 function mostrarDetalle(id) {
   deptoActivo = id;
   const d = BD[id];
   if (!d) return;
 
-  // Resaltar activo
   document.querySelectorAll('.btn-depto').forEach(b => b.classList.remove('active'));
-  document.querySelector(`.btn-depto[data-id="${id}"]`)?.classList.add('active');
+  const btnActivo = document.querySelector('.btn-depto[data-id="' + id + '"]');
+  if (btnActivo) btnActivo.classList.add('active');
 
   document.getElementById('detallePlaceholder').style.display = 'none';
   document.getElementById('detalleBody').style.display = 'block';
 
-  document.getElementById('dNum').textContent = id;
+  document.getElementById('dNum').textContent      = id;
   document.getElementById('dInquilino').textContent = d.inquilino || '—';
 
-  // Badge
-  const badge = document.getElementById('dBadge');
+  const badge    = document.getElementById('dBadge');
   const esDeudor = d.estadoSheet && d.estadoSheet.trim() === 'Con deuda';
   badge.textContent = esDeudor ? 'Con deuda' : 'Al día';
-  badge.className = 'badge ' + (esDeudor ? 'badge-red' : 'badge-green');
+  badge.className   = 'badge ' + (esDeudor ? 'badge-red' : 'badge-green');
 
-  // Valores
   setConcepto('dAlquiler', d.alquiler);
-  setConcepto('dMant', d.mantenimiento);
-  setConcepto('dLimp', d.limpieza);
-  setConcepto('dSeg', d.seguridad);
-  setConcepto('dAgua', d.agua);
-  setConcepto('dElec', d.electricidad);
+  setConcepto('dMant',     d.mantenimiento);
+  setConcepto('dLimp',     d.limpieza);
+  setConcepto('dSeg',      d.seguridad);
+  setConcepto('dAgua',     d.agua);
+  setConcepto('dElec',     d.electricidad);
 
-  const total = d.totalMora || 0;
-  document.getElementById('dTotal').textContent = `${total} Bs.`;
+  document.getElementById('dTotal').textContent = (d.totalMora || 0) + ' Bs.';
 
-  // WhatsApp
+  // ── WhatsApp: generar URL dinámica y guardar en columna O ──────────────────
   const btnWa = document.getElementById('btnWa');
-  if (esDeudor && d.urlWap && d.urlWap.trim() !== '') {
-    btnWa.href = d.urlWap.trim();
-    btnWa.style.display = 'flex';
-  } else if (esDeudor) {
-    btnWa.href = '#';
-    btnWa.style.display = 'flex';
-    btnWa.onclick = (e) => {
-      e.preventDefault();
-      mostrarAviso('Este departamento no tiene URL de WhatsApp configurada (columna O vacía).');
-    };
+  if (esDeudor) {
+    const fono = (d.fono || '').trim();
+    if (fono !== '') {
+      const mensaje =
+        'Estimado/a ' + (d.inquilino || '') + ', le recordamos que tiene una deuda pendiente en el Edificio.' +
+        '\n\nDetalle de cargos:' +
+        '\nAlquiler: '      + (d.alquiler      || 0) + ' Bs.' +
+        '\nMantenimiento: ' + (d.mantenimiento  || 0) + ' Bs.' +
+        '\nLimpieza: '      + (d.limpieza       || 0) + ' Bs.' +
+        '\nSeguridad: '     + (d.seguridad      || 0) + ' Bs.' +
+        '\nAgua: '          + (d.agua           || 0) + ' Bs.' +
+        '\nElectricidad: '  + (d.electricidad   || 0) + ' Bs.' +
+        '\n\nTotal adeudado: ' + (d.totalMora || 0) + ' Bs.' +
+        '\n\nPor favor regularice su situación a la brevedad.';
+
+      const urlWa = 'https://wa.me/' + fono + '?text=' + encodeURIComponent(mensaje);
+
+      btnWa.href         = urlWa;
+      btnWa.style.display = 'flex';
+      btnWa.onclick       = null;
+
+      // Guardar URL generada en columna O (URL_WAP) vía form oculto
+      guardarUrlWap(id, urlWa);
+
+    } else {
+      btnWa.href          = '#';
+      btnWa.style.display = 'flex';
+      btnWa.onclick = function(e) {
+        e.preventDefault();
+        mostrarAviso('Este departamento no tiene número WhatsApp en la columna E.');
+      };
+    }
   } else {
     btnWa.style.display = 'none';
   }
@@ -756,7 +764,7 @@ function mostrarDetalle(id) {
   // Recibo existente
   const reciboLink = document.getElementById('reciboExistente');
   if (d.reciboPago && d.reciboPago.trim() !== '') {
-    reciboLink.href = d.reciboPago.trim();
+    reciboLink.href         = d.reciboPago.trim();
     reciboLink.style.display = 'flex';
   } else {
     reciboLink.style.display = 'none';
@@ -768,7 +776,7 @@ function mostrarDetalle(id) {
 function setConcepto(elId, val) {
   const el = document.getElementById(elId);
   if (val && val > 0) {
-    el.textContent = `${val} Bs.`;
+    el.textContent = val + ' Bs.';
     el.classList.remove('zero');
   } else {
     el.textContent = '—';
@@ -776,12 +784,33 @@ function setConcepto(elId, val) {
   }
 }
 
-// ── MODAL COMPROBANTE ────────────────────────────────────────────────────────
+// ── GUARDAR URL_WAP en columna O (form oculto → iframe) ──────────────────────
+function guardarUrlWap(idDepto, urlWa) {
+  const form = document.createElement('form');
+  form.method = 'POST';
+  form.action = APPS_SCRIPT_URL;
+  form.target = 'iframeOculto';
+
+  const campos = { accion: 'guardarUrlWap', departamento: idDepto, urlWap: urlWa };
+  Object.keys(campos).forEach(function(name) {
+    const input = document.createElement('input');
+    input.type  = 'hidden';
+    input.name  = name;
+    input.value = campos[name];
+    form.appendChild(input);
+  });
+
+  document.body.appendChild(form);
+  form.submit();
+  document.body.removeChild(form);
+}
+
+// ── MODAL COMPROBANTE ─────────────────────────────────────────────────────────
 function abrirModal() {
   if (!deptoActivo) return;
-  document.getElementById('f_departamento').value = deptoActivo;
-  document.getElementById('f_urlComp').value = '';
-  document.getElementById('fileInput').value = '';
+  document.getElementById('f_departamento').value  = deptoActivo;
+  document.getElementById('f_urlComp').value        = '';
+  document.getElementById('fileInput').value        = '';
   document.getElementById('uploadProgress').style.display = 'none';
   document.getElementById('btnEnviarComp').disabled = false;
   document.getElementById('modalComp').classList.add('open');
@@ -808,12 +837,16 @@ async function procesarComprobante() {
     fd.append('file', fileInput.files[0]);
     fd.append('upload_preset', 'Unsigned');
 
-    const r    = await fetch('https://api.cloudinary.com/v1_1/dpfoul2dc/upload', { method: 'POST', body: fd });
+    const r    = await fetch(CLOUDINARY_URL, { method: 'POST', body: fd });
     const data = await r.json();
 
     document.getElementById('f_urlComp').value = data.url || data.secure_url || '';
 
     document.getElementById('formComp').submit();
+
+    prog.style.display = 'none';
+    cerrarModal();
+    mostrarOk('✅ Comprobante subido correctamente para el depto ' + deptoActivo + '.');
 
   } catch (err) {
     prog.style.display = 'none';
@@ -822,42 +855,43 @@ async function procesarComprobante() {
   }
 }
 
-// ── HELPERS UI ───────────────────────────────────────────────────────────────
+// ── HELPERS UI ────────────────────────────────────────────────────────────────
 function setLoading(on) {
   document.getElementById('loaderOverlay').classList.toggle('show', on);
   document.getElementById('btnSync').disabled = on;
-  const spinner = document.getElementById('syncSpinner');
-  const label   = document.getElementById('syncLabel');
-  spinner.style.display = on ? 'block' : 'none';
-  label.textContent = on ? 'Cargando…' : 'Sincronizar';
+  document.getElementById('syncSpinner').style.display = on ? 'block' : 'none';
+  document.getElementById('syncLabel').textContent     = on ? 'Cargando…' : 'Sincronizar';
 }
 
 function ocultarAlertas() {
+  document.getElementById('alertOk').style.display   = 'none';
   document.getElementById('alertWarn').style.display = 'none';
   document.getElementById('alertErr').style.display  = 'none';
 }
 
+function mostrarOk(msg) {
+  const el = document.getElementById('alertOk');
+  el.textContent   = msg;
+  el.style.display = 'flex';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
 function mostrarAviso(msg) {
   const el = document.getElementById('alertWarn');
-  el.textContent = '⚠ ' + msg;
+  el.textContent   = '⚠ ' + msg;
   el.style.display = 'flex';
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function mostrarError(msg) {
   const el = document.getElementById('alertErr');
-  el.textContent = '✕ ' + msg;
+  el.textContent   = '✕ ' + msg;
   el.style.display = 'flex';
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-// ── INICIO ───────────────────────────────────────────────────────────────────
-window.addEventListener('DOMContentLoaded', () => {
-  // Mostrar aviso inicial antes de sincronizar
-  document.getElementById('alertWarn').textContent =
-    '⚠ Si ves errores CORS, abre el Apps Script Web App directamente una vez para aceptar permisos.';
-  document.getElementById('alertWarn').style.display = 'flex';
-
+// ── INICIO ────────────────────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', function() {
   sincronizar();
 });
 </script>
