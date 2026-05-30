@@ -240,7 +240,7 @@
   }
   .depto-num {
     font-family: var(--display);
-    font-size: 2rem;
+    font-size: 1.2rem;
     font-weight: 800;
     color: var(--text);
     line-height: 1;
@@ -308,8 +308,7 @@
     margin-bottom: 16px;
   }
   .total-label { font-size: 12px; font-family: var(--mono); color: var(--text-muted); }
-  .total-val   { font-family: var(--display); font-size: 1.4rem; font-weight: 800; color: #fff; }
-
+  .total-val   { font-family: var(--mono); font-size: 1rem; font-weight: 700; color: #fff; }
   .acciones { display: flex; flex-direction: column; gap: 8px; }
 
   .btn-wa {
@@ -721,7 +720,7 @@ function mostrarDetalle(id) {
   setConcepto('dAgua',     d.agua);
   setConcepto('dElec',     d.electricidad);
 
-  document.getElementById('dTotal').textContent = (d.totalMora || 0) + ' Bs.';
+  document.getElementById('dTotal').textContent = parseFloat(d.totalMora || 0).toFixed(2) + ' Bs.';
 
   // ── WhatsApp: generar URL dinámica y guardar en columna O ──────────────────
   const btnWa = document.getElementById('btnWa');
@@ -742,12 +741,11 @@ function mostrarDetalle(id) {
 
       const urlWa = 'https://wa.me/' + fono + '?text=' + encodeURIComponent(mensaje);
 
-      btnWa.href         = urlWa;
-      btnWa.style.display = 'flex';
-      btnWa.onclick       = null;
-
-      // Guardar URL generada en columna O (URL_WAP) vía form oculto
-      guardarUrlWap(id, urlWa);
+      btnWa.href          = urlWa;
+        btnWa.style.display = 'flex';
+        btnWa.onclick = function(e) {
+        guardarUrlWap(id, urlWa);
+        };
 
     } else {
       btnWa.href          = '#';
