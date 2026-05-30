@@ -844,7 +844,11 @@ async function procesarComprobante() {
 
     prog.style.display = 'none';
     cerrarModal();
-    mostrarOk('✅ Comprobante subido correctamente para el depto ' + deptoActivo + '.');
+
+    if (BD[deptoActivo]) BD[deptoActivo].estadoSheet = 'Al día';
+    renderEdificio();
+    mostrarDetalle(deptoActivo);
+    mostrarOk('✅ Comprobante subido y estado actualizado a Al día para depto ' + deptoActivo + '.');
 
   } catch (err) {
     prog.style.display = 'none';
