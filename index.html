@@ -804,21 +804,15 @@ async function procesarComprobante() {
   prog.style.display = 'flex';
 
   try {
-    // 1. Crear FormData con file y upload_preset únicamente
-    const formData = new FormData();
-    formData.append('file', fileInput.files[0]);
-    formData.append('upload_preset', 'ml_default');
+    const fd = new FormData();
+    fd.append('file', fileInput.files[0]);
+    fd.append('upload_preset', 'Unsigned');
 
-    // 2. fetch() solo hacia Cloudinary
-    const res = await fetch(CLOUDINARY_URL, { method: 'POST', body: formData });
-    const json = await res.json();
-    const secureUrl = json.secure_url;
-    if (!secureUrl) throw new Error('Cloudinary no devolvió secure_url.');
+    const r    = await fetch('https://api.cloudinary.com/v1_1/dpfoul2dc/upload', { method: 'POST', body: fd });
+    const data = await r.json();
 
-    // 3. Guardar secure_url en input hidden
-    document.getElementById('f_urlComp').value = secureUrl;
+    document.getElementById('f_urlComp').value = data.url || data.secure_url || '';
 
-    // 4. form.submit() — envía el formulario real al Apps Script
     document.getElementById('formComp').submit();
 
   } catch (err) {
