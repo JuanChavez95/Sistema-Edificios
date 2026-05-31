@@ -53,16 +53,21 @@
   <!-- PASO 1: Verificar -->
   <div class="card p-4 mb-3" id="paso1">
     <h6 style="color:#c4b5fd;" class="mb-3"><i class="bi bi-person-badge me-1"></i>Paso 1 — Verificar identidad</h6>
-    <div class="mb-3">
-      <label class="form-label">Departamento</label>
-      <input type="text" class="form-control" id="inputDepto" placeholder="Ej: 201, 3B…">
-      <div id="erDepto" style="font-size:.78rem;color:#f87171;display:none;"></div>
+
+    <!-- ✅ CAMBIO: Departamento y CI en la misma fila -->
+    <div class="row g-3 mb-3">
+      <div class="col-5">
+        <label class="form-label">Departamento</label>
+        <input type="text" class="form-control" id="inputDepto" placeholder="Ej: 201, 3B…">
+        <div id="erDepto" style="font-size:.78rem;color:#f87171;display:none;"></div>
+      </div>
+      <div class="col-7">
+        <label class="form-label">Carnet de Identidad (CI)</label>
+        <input type="text" class="form-control" id="inputCI" placeholder="Ej: 7854321">
+        <div id="erCI" style="font-size:.78rem;color:#f87171;display:none;"></div>
+      </div>
     </div>
-    <div class="mb-3">
-      <label class="form-label">Carnet de Identidad (CI)</label>
-      <input type="text" class="form-control" id="inputCI" placeholder="Ej: 7854321">
-      <div id="erCI" style="font-size:.78rem;color:#f87171;display:none;"></div>
-    </div>
+
     <button class="btn btn-morado w-100" id="btnVerificar" onclick="verificar()">
       <span id="vText"><i class="bi bi-shield-check me-1"></i>Verificar</span>
       <span id="vLoad" style="display:none;"><span class="spinner-border spinner-border-sm me-1"></span>Verificando…</span>
