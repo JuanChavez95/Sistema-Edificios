@@ -764,12 +764,13 @@ function mostrarDetalle(id) {
 
   // ── BOTÓN MARCAR AL DÍA ─────────────────────────────────────────────────
   const btnAlDia = document.getElementById('btnAlDia');
-  if (esDeudor) {
+    if (esDeudor) {
     btnAlDia.style.display  = 'flex';
     btnAlDia.disabled       = false;
-  } else {
+    btnAlDia.textContent    = 'Marcar como Al día';  // ← solo esto
+    } else {
     btnAlDia.style.display  = 'none';
-  }
+    }
 }
 
 function setConcepto(elId, val) {
