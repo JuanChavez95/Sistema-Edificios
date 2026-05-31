@@ -788,15 +788,16 @@ function marcarAlDia() {
   if (!deptoActivo) return;
 
   const btn = document.getElementById('btnAlDia');
+  const idDepto = deptoActivo; // capturar antes del timeout
   btn.disabled = true;
-  btn.innerHTML = '<span style="width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;display:inline-block;"></span> Guardando…';
+  btn.textContent = 'Guardando…';
 
   const form = document.createElement('form');
   form.method = 'POST';
   form.action = APPS_SCRIPT_URL;
   form.target = 'iframeOculto';
 
-  [['accion', 'marcarAlDia'], ['departamento', deptoActivo]].forEach(function([name, value]) {
+  [['accion', 'marcarAlDia'], ['departamento', idDepto]].forEach(function([name, value]) {
     const input = document.createElement('input');
     input.type  = 'hidden';
     input.name  = name;
@@ -808,12 +809,11 @@ function marcarAlDia() {
   form.submit();
   document.body.removeChild(form);
 
-  // Actualizar BD local y re-renderizar sin esperar respuesta del iframe
   setTimeout(() => {
-    if (BD[deptoActivo]) BD[deptoActivo].estadoSheet = 'Al día';
+    if (BD[idDepto]) BD[idDepto].estadoSheet = 'Al día';
     renderEdificio();
-    mostrarDetalle(deptoActivo);
-    mostrarOk('✅ Depto ' + deptoActivo + ' marcado como Al día.');
+    mostrarDetalle(idDepto);
+    mostrarOk('✅ Depto ' + idDepto + ' marcado como Al día.');
   }, 1000);
 }
 
