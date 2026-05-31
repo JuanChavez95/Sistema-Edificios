@@ -107,7 +107,6 @@
     max-width: 1280px;
     margin: 0 auto;
   }
-
   @media (max-width: 900px) {
     .layout { grid-template-columns: 1fr; }
   }
@@ -159,8 +158,9 @@
     font-family: var(--mono);
   }
   .legend-dot { width: 8px; height: 8px; border-radius: 50%; }
-  .legend-dot.green { background: var(--green-l); }
-  .legend-dot.red   { background: var(--red-l); }
+  .legend-dot.green  { background: var(--green-l); }
+  .legend-dot.red    { background: var(--red-l); }
+  .legend-dot.orange { background: #f97316; }
 
   .pisos-container { padding: 16px 20px; }
 
@@ -199,6 +199,8 @@
   .btn-depto.active { outline: 2px solid #fff; outline-offset: 1px; }
   .btn-depto.al-dia    { background: var(--green); }
   .btn-depto.con-deuda { background: var(--red); }
+  /* Naranja: tiene deuda pero ya subió comprobante pendiente de revisión */
+  .btn-depto.pendiente { background: #c2410c; }
   .btn-depto.vacio     { background: var(--surface2); color: var(--text-dim); cursor: default; }
 
   /* ── PANEL DETALLE ── */
@@ -255,8 +257,9 @@
     border-radius: 20px;
     letter-spacing: .04em;
   }
-  .badge-green { background: #052e16; color: var(--green-l); border: 1px solid #166534; }
-  .badge-red   { background: #450a0a; color: var(--red-l);   border: 1px solid #7f1d1d; }
+  .badge-green  { background: #052e16; color: var(--green-l);  border: 1px solid #166534; }
+  .badge-red    { background: #450a0a; color: var(--red-l);    border: 1px solid #7f1d1d; }
+  .badge-orange { background: #431407; color: #fb923c;         border: 1px solid #9a3412; }
 
   .field-group { margin-bottom: 16px; }
   .field-label {
@@ -309,6 +312,7 @@
   }
   .total-label { font-size: 12px; font-family: var(--mono); color: var(--text-muted); }
   .total-val   { font-family: var(--mono); font-size: 1rem; font-weight: 700; color: #fff; }
+
   .acciones { display: flex; flex-direction: column; gap: 8px; }
 
   .btn-wa {
@@ -330,119 +334,74 @@
   }
   .btn-wa:hover { background: #15803d; }
 
-  .btn-upload {
-    background: var(--surface2);
-    color: var(--text);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 11px 16px;
-    font-family: var(--sans);
-    font-weight: 500;
-    font-size: 13px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    transition: border-color .15s, color .15s;
-  }
-  .btn-upload:hover { border-color: var(--purple-l); color: var(--purple-l); }
-
-  /* ── MODAL COMPROBANTE ── */
-  .modal-overlay {
+  /* ── COMPROBANTE VISOR ── */
+  .comprobante-wrap {
     display: none;
-    position: fixed; inset: 0;
-    background: rgba(0,0,0,.7);
-    z-index: 200;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 16px;
   }
-  .modal-overlay.open { display: flex; }
-  .modal-box {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 28px;
-    width: 100%; max-width: 420px;
-  }
-  .modal-title {
-    font-family: var(--display);
-    font-weight: 700;
-    font-size: 1.1rem;
-    margin-bottom: 20px;
-  }
-  .form-group { margin-bottom: 16px; }
-  .form-label {
-    display: block;
-    font-size: 11px;
+  .comprobante-label {
+    font-size: 10px;
     font-family: var(--mono);
     text-transform: uppercase;
     letter-spacing: .08em;
     color: var(--text-dim);
-    margin-bottom: 6px;
   }
-  .form-input {
+  .comprobante-img {
     width: 100%;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    object-fit: contain;
+    max-height: 220px;
+    background: var(--surface2);
+    cursor: pointer;
+    transition: opacity .15s;
+  }
+  .comprobante-img:hover { opacity: .88; }
+  .comprobante-pdf-link {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--purple-l);
+    text-decoration: none;
+    padding: 10px 14px;
     background: var(--surface2);
     border: 1px solid var(--border);
     border-radius: 8px;
-    color: var(--text);
-    font-family: var(--sans);
-    font-size: 13px;
-    padding: 10px 12px;
-    outline: none;
-    transition: border-color .15s;
   }
-  .form-input:focus { border-color: var(--purple-l); }
-  .form-input[type="file"] { cursor: pointer; }
-
-  .upload-progress {
-    display: none;
-    align-items: center;
-    gap: 10px;
+  .comprobante-pdf-link:hover { border-color: var(--purple-l); }
+  .sin-comprobante {
     font-size: 12px;
-    color: var(--text-muted);
-    margin-bottom: 12px;
-  }
-  .upload-progress .prog-spin {
-    width: 14px; height: 14px;
-    border: 2px solid var(--border);
-    border-top-color: var(--purple-l);
-    border-radius: 50%;
-    animation: spin .6s linear infinite;
-    flex-shrink: 0;
-  }
-
-  .modal-actions { display: flex; gap: 10px; margin-top: 20px; }
-  .btn-cancel {
-    flex: 1;
-    background: transparent;
-    color: var(--text-muted);
+    color: var(--text-dim);
+    padding: 10px 14px;
+    background: var(--surface2);
     border: 1px solid var(--border);
     border-radius: 8px;
-    padding: 10px;
-    font-family: var(--sans);
-    font-size: 13px;
-    cursor: pointer;
-    transition: border-color .15s;
+    text-align: center;
+    font-family: var(--mono);
   }
-  .btn-cancel:hover { border-color: var(--text-muted); }
-  .btn-submit {
-    flex: 2;
-    background: var(--purple);
+
+  /* ── BOTÓN MARCAR AL DÍA ── */
+  .btn-al-dia {
+    background: var(--green);
     color: #fff;
     border: none;
     border-radius: 8px;
-    padding: 10px;
+    padding: 12px 16px;
     font-family: var(--sans);
-    font-weight: 600;
+    font-weight: 700;
     font-size: 13px;
     cursor: pointer;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
     transition: background .15s;
   }
-  .btn-submit:hover { background: var(--purple-l); }
-  .btn-submit:disabled { opacity: .5; cursor: not-allowed; }
+  .btn-al-dia:hover    { background: #15803d; }
+  .btn-al-dia:disabled { opacity: .5; cursor: not-allowed; }
 
   /* ── LOADER GLOBAL ── */
   .loader-overlay {
@@ -465,16 +424,35 @@
   }
   .loader-txt { font-size: 13px; color: var(--text-muted); }
 
-  .recibo-link {
+  /* ── LIGHTBOX IMAGEN ── */
+  .lightbox {
     display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,.9);
+    z-index: 400;
     align-items: center;
-    gap: 6px;
-    font-size: 12px;
-    color: var(--purple-l);
-    text-decoration: none;
-    margin-top: 4px;
+    justify-content: center;
+    padding: 20px;
+    cursor: zoom-out;
   }
-  .recibo-link:hover { text-decoration: underline; }
+  .lightbox.open { display: flex; }
+  .lightbox img {
+    max-width: 100%;
+    max-height: 90vh;
+    border-radius: 10px;
+    box-shadow: 0 0 60px rgba(0,0,0,.8);
+  }
+  .lightbox-close {
+    position: absolute;
+    top: 16px; right: 20px;
+    color: #fff;
+    font-size: 28px;
+    cursor: pointer;
+    line-height: 1;
+    opacity: .7;
+    transition: opacity .15s;
+  }
+  .lightbox-close:hover { opacity: 1; }
 
   ::-webkit-scrollbar { width: 6px; }
   ::-webkit-scrollbar-track { background: var(--bg); }
@@ -487,6 +465,12 @@
 <div class="loader-overlay" id="loaderOverlay">
   <div class="loader-big"></div>
   <div class="loader-txt">Sincronizando datos…</div>
+</div>
+
+<!-- LIGHTBOX -->
+<div class="lightbox" id="lightbox" onclick="cerrarLightbox()">
+  <span class="lightbox-close">✕</span>
+  <img id="lightboxImg" src="" alt="Comprobante">
 </div>
 
 <!-- TOPBAR -->
@@ -520,6 +504,7 @@
       <div class="legend">
         <div class="legend-item"><div class="legend-dot green"></div>Al día</div>
         <div class="legend-item"><div class="legend-dot red"></div>Con deuda</div>
+        <div class="legend-item"><div class="legend-dot orange"></div>Pago enviado</div>
       </div>
     </div>
     <div class="pisos-container" id="contenedorPisos"></div>
@@ -563,68 +548,36 @@
         <div class="total-val" id="dTotal"></div>
       </div>
 
+      <!-- COMPROBANTE VISOR (solo admin) -->
+      <div class="comprobante-wrap" id="comprobanteWrap">
+        <div class="comprobante-label">Comprobante de pago</div>
+        <div id="comprobanteContenido"></div>
+      </div>
+
       <div class="acciones">
+
+        <!-- WhatsApp: solo visible si tiene deuda -->
         <a class="btn-wa" id="btnWa" href="#" target="_blank" rel="noopener" style="display:none">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
           Enviar Recordatorio
         </a>
 
-        <button class="btn-upload" id="btnSubirComp" onclick="abrirModal()">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-          Subir Comprobante de Pago
+        <!-- Marcar Al día: solo visible si tiene deuda -->
+        <button class="btn-al-dia" id="btnAlDia" onclick="marcarAlDia()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          Marcar como Al día
         </button>
 
-        <a class="recibo-link" id="reciboExistente" href="#" target="_blank" rel="noopener">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-          Ver comprobante existente
-        </a>
       </div>
-
     </div>
   </div>
 </div>
 
-<!-- MODAL COMPROBANTE -->
-<div class="modal-overlay" id="modalComp">
-  <div class="modal-box">
-    <div class="modal-title">📎 Subir Comprobante de Pago</div>
-
-    <!-- target apunta al iframe oculto para no redirigir la página -->
-    <form id="formComp"
-          action="https://script.google.com/macros/s/AKfycbzJZReANJd6X8qYKzyEt6gL3XZcZ22KhBDXRsjXOxAa1PYYw-W9qVTTkvxlAUPiQNQ/exec"
-          method="POST"
-          target="iframeOculto">
-
-      <input type="hidden" name="accion"         id="f_accion"      value="subirComprobante">
-      <input type="hidden" name="departamento"   id="f_departamento">
-      <input type="hidden" name="urlComprobante" id="f_urlComp">
-
-      <div class="form-group">
-        <label class="form-label" for="fileInput">Imagen del comprobante</label>
-        <input class="form-input" type="file" id="fileInput" accept="image/*,application/pdf" required>
-      </div>
-
-      <div class="upload-progress" id="uploadProgress">
-        <div class="prog-spin"></div>
-        <span>Subiendo a Cloudinary…</span>
-      </div>
-
-      <div class="modal-actions">
-        <button type="button" class="btn-cancel" onclick="cerrarModal()">Cancelar</button>
-        <button type="button" class="btn-submit" id="btnEnviarComp" onclick="procesarComprobante()">
-          Subir y Guardar
-        </button>
-      </div>
-    </form>
-  </div>
-</div>
-
-<!-- iframe oculto: absorbe la respuesta del form.submit() sin redirigir la página -->
+<!-- iframe oculto para form POST sin redirección -->
 <iframe name="iframeOculto" style="display:none"></iframe>
 
 <script>
 const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzJZReANJd6X8qYKzyEt6gL3XZcZ22KhBDXRsjXOxAa1PYYw-W9qVTTkvxlAUPiQNQ/exec";
-const CLOUDINARY_URL  = "https://api.cloudinary.com/v1_1/dpfoul2dc/upload";
 
 let BD = {};
 let deptoActivo = null;
@@ -634,11 +587,12 @@ function sincronizar() {
   setLoading(true);
   ocultarAlertas();
 
-  fetch(APPS_SCRIPT_URL + "?accion=leer&ts=" + Date.now())
+  fetch(APPS_SCRIPT_URL + "?ts=" + Date.now())
     .then(r => r.json())
     .then(data => {
       BD = data;
       renderEdificio();
+      if (deptoActivo && BD[deptoActivo]) mostrarDetalle(deptoActivo);
       setLoading(false);
     })
     .catch(err => {
@@ -668,15 +622,20 @@ function renderEdificio() {
       const data = BD[id];
 
       const btn = document.createElement('button');
-      btn.className    = 'btn-depto';
-      btn.textContent  = id;
-      btn.dataset.id   = id;
+      btn.className   = 'btn-depto';
+      btn.textContent = id;
+      btn.dataset.id  = id;
 
       if (!data) {
         btn.classList.add('vacio');
         btn.disabled = true;
       } else if (data.estadoSheet && data.estadoSheet.trim() === 'Con deuda') {
-        btn.classList.add('con-deuda');
+        // Si tiene comprobante subido → naranja (pago pendiente de revisión)
+        if (data.reciboPago && data.reciboPago.trim() !== '') {
+          btn.classList.add('pendiente');
+        } else {
+          btn.classList.add('con-deuda');
+        }
         btn.onclick = () => mostrarDetalle(id);
       } else {
         btn.classList.add('al-dia');
@@ -705,13 +664,24 @@ function mostrarDetalle(id) {
   document.getElementById('detallePlaceholder').style.display = 'none';
   document.getElementById('detalleBody').style.display = 'block';
 
-  document.getElementById('dNum').textContent      = id;
-  document.getElementById('dInquilino').textContent = d.inquilino || '—';
+  document.getElementById('dNum').textContent       = id;
+  document.getElementById('dInquilino').textContent  = d.inquilino || '—';
 
-  const badge    = document.getElementById('dBadge');
   const esDeudor = d.estadoSheet && d.estadoSheet.trim() === 'Con deuda';
-  badge.textContent = esDeudor ? 'Con deuda' : 'Al día';
-  badge.className   = 'badge ' + (esDeudor ? 'badge-red' : 'badge-green');
+  const tieneComprobante = d.reciboPago && d.reciboPago.trim() !== '';
+
+  // Badge: si tiene deuda y ya subió comprobante → "Pago enviado"
+  const badge = document.getElementById('dBadge');
+  if (esDeudor && tieneComprobante) {
+    badge.textContent = 'Pago enviado';
+    badge.className   = 'badge badge-orange';
+  } else if (esDeudor) {
+    badge.textContent = 'Con deuda';
+    badge.className   = 'badge badge-red';
+  } else {
+    badge.textContent = 'Al día';
+    badge.className   = 'badge badge-green';
+  }
 
   setConcepto('dAlquiler', d.alquiler);
   setConcepto('dMant',     d.mantenimiento);
@@ -722,7 +692,45 @@ function mostrarDetalle(id) {
 
   document.getElementById('dTotal').textContent = parseFloat(d.totalMora || 0).toFixed(2) + ' Bs.';
 
-  // ── WhatsApp: generar URL dinámica y guardar en columna O ──────────────────
+  // ── COMPROBANTE VISOR ────────────────────────────────────────────────────
+  const wrap      = document.getElementById('comprobanteWrap');
+  const contenido = document.getElementById('comprobanteContenido');
+  contenido.innerHTML = '';
+
+  if (tieneComprobante) {
+    const url = d.reciboPago.trim();
+    const esPDF = url.toLowerCase().includes('.pdf') || url.toLowerCase().includes('/raw/upload/') && url.toLowerCase().endsWith('pdf');
+
+    if (esPDF) {
+      // PDF: mostrar enlace
+      const a = document.createElement('a');
+      a.className = 'comprobante-pdf-link';
+      a.href      = url;
+      a.target    = '_blank';
+      a.rel       = 'noopener';
+      a.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> Ver PDF del comprobante';
+      contenido.appendChild(a);
+    } else {
+      // Imagen: mostrar en visor con lightbox al click
+      const img = document.createElement('img');
+      img.className = 'comprobante-img';
+      img.src       = url;
+      img.alt       = 'Comprobante depto ' + id;
+      img.title     = 'Clic para ampliar';
+      img.onclick   = () => abrirLightbox(url);
+      contenido.appendChild(img);
+    }
+    wrap.style.display = 'flex';
+  } else {
+    // Sin comprobante
+    const msg = document.createElement('div');
+    msg.className   = 'sin-comprobante';
+    msg.textContent = 'Sin comprobante adjunto';
+    contenido.appendChild(msg);
+    wrap.style.display = 'flex';
+  }
+
+  // ── WhatsApp ────────────────────────────────────────────────────────────
   const btnWa = document.getElementById('btnWa');
   if (esDeudor) {
     const fono = (d.fono || '').trim();
@@ -738,15 +746,10 @@ function mostrarDetalle(id) {
         '\nElectricidad: '  + (d.electricidad   || 0) + ' Bs.' +
         '\n\nTotal adeudado: ' + (d.totalMora || 0) + ' Bs.' +
         '\n\nPor favor regularice su situación a la brevedad.';
-
       const urlWa = 'https://wa.me/' + fono + '?text=' + encodeURIComponent(mensaje);
-
       btnWa.href          = urlWa;
-        btnWa.style.display = 'flex';
-        btnWa.onclick = function(e) {
-        guardarUrlWap(id, urlWa);
-        };
-
+      btnWa.style.display = 'flex';
+      btnWa.onclick = function() { guardarUrlWap(id, urlWa); };
     } else {
       btnWa.href          = '#';
       btnWa.style.display = 'flex';
@@ -759,16 +762,14 @@ function mostrarDetalle(id) {
     btnWa.style.display = 'none';
   }
 
-  // Recibo existente
-  const reciboLink = document.getElementById('reciboExistente');
-  if (d.reciboPago && d.reciboPago.trim() !== '') {
-    reciboLink.href         = d.reciboPago.trim();
-    reciboLink.style.display = 'flex';
+  // ── BOTÓN MARCAR AL DÍA ─────────────────────────────────────────────────
+  const btnAlDia = document.getElementById('btnAlDia');
+  if (esDeudor) {
+    btnAlDia.style.display  = 'flex';
+    btnAlDia.disabled       = false;
   } else {
-    reciboLink.style.display = 'none';
+    btnAlDia.style.display  = 'none';
   }
-
-  document.getElementById('f_departamento').value = id;
 }
 
 function setConcepto(elId, val) {
@@ -782,7 +783,41 @@ function setConcepto(elId, val) {
   }
 }
 
-// ── GUARDAR URL_WAP en columna O (form oculto → iframe) ──────────────────────
+// ── MARCAR AL DÍA ─────────────────────────────────────────────────────────────
+function marcarAlDia() {
+  if (!deptoActivo) return;
+
+  const btn = document.getElementById('btnAlDia');
+  btn.disabled = true;
+  btn.innerHTML = '<span style="width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;display:inline-block;"></span> Guardando…';
+
+  const form = document.createElement('form');
+  form.method = 'POST';
+  form.action = APPS_SCRIPT_URL;
+  form.target = 'iframeOculto';
+
+  [['accion', 'marcarAlDia'], ['departamento', deptoActivo]].forEach(function([name, value]) {
+    const input = document.createElement('input');
+    input.type  = 'hidden';
+    input.name  = name;
+    input.value = value;
+    form.appendChild(input);
+  });
+
+  document.body.appendChild(form);
+  form.submit();
+  document.body.removeChild(form);
+
+  // Actualizar BD local y re-renderizar sin esperar respuesta del iframe
+  setTimeout(() => {
+    if (BD[deptoActivo]) BD[deptoActivo].estadoSheet = 'Al día';
+    renderEdificio();
+    mostrarDetalle(deptoActivo);
+    mostrarOk('✅ Depto ' + deptoActivo + ' marcado como Al día.');
+  }, 1000);
+}
+
+// ── GUARDAR URL_WAP en columna O ──────────────────────────────────────────────
 function guardarUrlWap(idDepto, urlWa) {
   const form = document.createElement('form');
   form.method = 'POST';
@@ -803,58 +838,14 @@ function guardarUrlWap(idDepto, urlWa) {
   document.body.removeChild(form);
 }
 
-// ── MODAL COMPROBANTE ─────────────────────────────────────────────────────────
-function abrirModal() {
-  if (!deptoActivo) return;
-  document.getElementById('f_departamento').value  = deptoActivo;
-  document.getElementById('f_urlComp').value        = '';
-  document.getElementById('fileInput').value        = '';
-  document.getElementById('uploadProgress').style.display = 'none';
-  document.getElementById('btnEnviarComp').disabled = false;
-  document.getElementById('modalComp').classList.add('open');
+// ── LIGHTBOX ──────────────────────────────────────────────────────────────────
+function abrirLightbox(src) {
+  document.getElementById('lightboxImg').src = src;
+  document.getElementById('lightbox').classList.add('open');
 }
-
-function cerrarModal() {
-  document.getElementById('modalComp').classList.remove('open');
-}
-
-async function procesarComprobante() {
-  const fileInput = document.getElementById('fileInput');
-  if (!fileInput.files || fileInput.files.length === 0) {
-    alert('Por favor selecciona un archivo.');
-    return;
-  }
-
-  const btn  = document.getElementById('btnEnviarComp');
-  const prog = document.getElementById('uploadProgress');
-  btn.disabled = true;
-  prog.style.display = 'flex';
-
-  try {
-    const fd = new FormData();
-    fd.append('file', fileInput.files[0]);
-    fd.append('upload_preset', 'Unsigned');
-
-    const r    = await fetch(CLOUDINARY_URL, { method: 'POST', body: fd });
-    const data = await r.json();
-
-    document.getElementById('f_urlComp').value = data.url || data.secure_url || '';
-
-    document.getElementById('formComp').submit();
-
-    prog.style.display = 'none';
-    cerrarModal();
-
-    if (BD[deptoActivo]) BD[deptoActivo].estadoSheet = 'Al día';
-    renderEdificio();
-    mostrarDetalle(deptoActivo);
-    mostrarOk('✅ Comprobante subido y estado actualizado a Al día para depto ' + deptoActivo + '.');
-
-  } catch (err) {
-    prog.style.display = 'none';
-    btn.disabled = false;
-    alert('Error al subir comprobante: ' + err.message);
-  }
+function cerrarLightbox() {
+  document.getElementById('lightbox').classList.remove('open');
+  document.getElementById('lightboxImg').src = '';
 }
 
 // ── HELPERS UI ────────────────────────────────────────────────────────────────
@@ -864,27 +855,23 @@ function setLoading(on) {
   document.getElementById('syncSpinner').style.display = on ? 'block' : 'none';
   document.getElementById('syncLabel').textContent     = on ? 'Cargando…' : 'Sincronizar';
 }
-
 function ocultarAlertas() {
   document.getElementById('alertOk').style.display   = 'none';
   document.getElementById('alertWarn').style.display = 'none';
   document.getElementById('alertErr').style.display  = 'none';
 }
-
 function mostrarOk(msg) {
   const el = document.getElementById('alertOk');
   el.textContent   = msg;
   el.style.display = 'flex';
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
-
 function mostrarAviso(msg) {
   const el = document.getElementById('alertWarn');
   el.textContent   = '⚠ ' + msg;
   el.style.display = 'flex';
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
-
 function mostrarError(msg) {
   const el = document.getElementById('alertErr');
   el.textContent   = '✕ ' + msg;
