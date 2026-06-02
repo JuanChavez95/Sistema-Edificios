@@ -984,7 +984,6 @@ function mostrarDetalle(id) {
 
   // ── NUEVO: PRECARGAR SECCIÓN ADMIN ────────────────────────────────────────
   document.getElementById('inputPagoTotal').value = d.pagoTotal > 0 ? d.pagoTotal : '';
-  document.getElementById('inputDeuda').value     = d.deuda > 0     ? d.deuda     : '';
   document.getElementById('inputObs').value       = d.observaciones || '';
 
   const selectEstado = document.getElementById('selectEstado');
