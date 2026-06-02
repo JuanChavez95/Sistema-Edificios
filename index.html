@@ -1047,31 +1047,59 @@ function mostrarDetalle(id) {
 
 // ── NUEVO: CONSTRUIR MENSAJE WHATSAPP CON ESTADO, DEUDA Y OBSERVACIONES ──────
 function construirMensajeWA(d) {
-  var estado = (d.estadoSheet || 'Con deuda').trim();
+  var estado = (d.estadoSheet || '').trim();
   var deuda  = d.deuda || 0;
   var obs    = (d.observaciones || '').trim();
 
-  var msg =
-    'Estimado/a ' + (d.inquilino || '') + ', le recordamos que tiene una deuda pendiente en el Edificio.' +
-    '\n\nDetalle de cargos:' +
-    '\nAlquiler: '      + (d.alquiler      || 0) + ' Bs.' +
-    '\nMantenimiento: ' + (d.mantenimiento  || 0) + ' Bs.' +
-    '\nLimpieza: '      + (d.limpieza       || 0) + ' Bs.' +
-    '\nSeguridad: '     + (d.seguridad      || 0) + ' Bs.' +
-    '\nAgua: '          + (d.agua           || 0) + ' Bs.' +
-    '\nElectricidad: '  + (d.electricidad   || 0) + ' Bs.' +
-    '\n\nTotal acumulado: ' + (d.totalMora || 0) + ' Bs.' +
-    '\n\nEstado: '  + estado;
+  var encabezado = '';
+  var cuerpo     = '';
 
-  if (deuda > 0) {
-    msg += '\nDeuda pendiente: ' + deuda + ' Bs.';
+  if (estado === 'Con Deuda' || estado === 'Con deuda') {
+    encabezado =
+      'Estimado/a ' + (d.inquilino || '') + ', le informamos que registra una deuda pendiente en el Edificio.';
+    cuerpo =
+      '\n\nDetalle de cargos:' +
+      '\nAlquiler: '      + (d.alquiler      || 0) + ' Bs.' +
+      '\nMantenimiento: ' + (d.mantenimiento  || 0) + ' Bs.' +
+      '\nLimpieza: '      + (d.limpieza       || 0) + ' Bs.' +
+      '\nSeguridad: '     + (d.seguridad      || 0) + ' Bs.' +
+      '\nAgua: '          + (d.agua           || 0) + ' Bs.' +
+      '\nElectricidad: '  + (d.electricidad   || 0) + ' Bs.' +
+      '\n\nTotal adeudado: ' + (d.totalMora || 0) + ' Bs.' +
+      '\n\nPor favor regularice su situación a la brevedad.';
   }
+
+  if (estado === 'Pago Parcial') {
+    encabezado =
+      'Estimado/a ' + (d.inquilino || '') + ', hemos recibido un pago parcial de su parte. Gracias por su abono.';
+    cuerpo =
+      '\n\nSin embargo, aún registra un saldo pendiente:' +
+      '\nDeuda pendiente: ' + deuda + ' Bs.' +
+      '\n\nLe pedimos regularizar el monto restante a la brevedad posible.';
+  }
+
+  if (estado === 'Mora') {
+    encabezado =
+      'Estimado/a ' + (d.inquilino || '') + ', le comunicamos que su cuenta se encuentra en MORA por falta de pago.';
+    cuerpo =
+      '\n\nDetalle de cargos:' +
+      '\nAlquiler: '      + (d.alquiler      || 0) + ' Bs.' +
+      '\nMantenimiento: ' + (d.mantenimiento  || 0) + ' Bs.' +
+      '\nLimpieza: '      + (d.limpieza       || 0) + ' Bs.' +
+      '\nSeguridad: '     + (d.seguridad      || 0) + ' Bs.' +
+      '\nAgua: '          + (d.agua           || 0) + ' Bs.' +
+      '\nElectricidad: '  + (d.electricidad   || 0) + ' Bs.' +
+      '\n\nTotal adeudado: ' + (d.totalMora || 0) + ' Bs.' +
+      '\nDeuda pendiente: ' + deuda + ' Bs.' +
+      '\n\nEsto puede generar cargos adicionales. Le exigimos regularizar su situación de forma inmediata.';
+  }
+
+  var msg = encabezado + cuerpo;
 
   if (obs !== '') {
     msg += '\n\nObservaciones: ' + obs;
   }
 
-  msg += '\n\nPor favor regularice su situación a la brevedad.';
   return msg;
 }
 
