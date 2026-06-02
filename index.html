@@ -151,7 +151,7 @@
     font-size: 1rem;
     color: var(--text);
   }
-  .legend { display: flex; gap: 12px; flex-wrap: wrap; }
+  .legend { display: flex; gap: 12px; }
   .legend-item {
     display: flex; align-items: center; gap: 5px;
     font-size: 11px; color: var(--text-muted);
@@ -161,7 +161,6 @@
   .legend-dot.green  { background: var(--green-l); }
   .legend-dot.red    { background: var(--red-l); }
   .legend-dot.orange { background: #f97316; }
-  .legend-dot.mora   { background: #7f1d1d; }
 
   .pisos-container { padding: 16px 20px; }
 
@@ -200,8 +199,8 @@
   .btn-depto.active { outline: 2px solid #fff; outline-offset: 1px; }
   .btn-depto.al-dia    { background: var(--green); }
   .btn-depto.con-deuda { background: var(--red); }
+  /* Naranja: tiene deuda pero ya subió comprobante pendiente de revisión */
   .btn-depto.pendiente { background: #c2410c; }
-  .btn-depto.mora      { background: #7f1d1d; }
   .btn-depto.vacio     { background: var(--surface2); color: var(--text-dim); cursor: default; }
 
   /* ── PANEL DETALLE ── */
@@ -261,7 +260,8 @@
   .badge-green  { background: #052e16; color: var(--green-l);  border: 1px solid #166534; }
   .badge-red    { background: #450a0a; color: var(--red-l);    border: 1px solid #7f1d1d; }
   .badge-orange { background: #431407; color: #fb923c;         border: 1px solid #9a3412; }
-  .badge-mora   { background: #3b0a0a; color: #fca5a5;         border: 1px solid #7f1d1d; }
+  /* ── NUEVO: badge mora ── */
+  .badge-mora   { background: #1c0b28; color: #c084fc;         border: 1px solid #7e22ce; }
 
   .field-group { margin-bottom: 16px; }
   .field-label {
@@ -405,6 +405,154 @@
   .btn-al-dia:hover    { background: #15803d; }
   .btn-al-dia:disabled { opacity: .5; cursor: not-allowed; }
 
+  /* ── NUEVO: SECCIÓN DATOS ACTUALES ── */
+  .datos-actuales-wrap {
+    display: none;
+    margin-bottom: 16px;
+  }
+  .datos-actuales-title {
+    font-size: 10px;
+    font-family: var(--mono);
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--text-dim);
+    margin-bottom: 8px;
+  }
+  .datos-actuales-grid {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .dato-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 9px 14px;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+    gap: 8px;
+  }
+  .dato-item:last-child { border-bottom: none; }
+  .dato-name { color: var(--text-muted); white-space: nowrap; }
+  .dato-val  { font-family: var(--mono); font-weight: 500; color: var(--text); text-align: right; }
+  .dato-val.empty { color: var(--text-dim); font-style: italic; }
+  .dato-val.obs-val {
+    text-align: right;
+    max-width: 200px;
+    white-space: pre-wrap;
+    word-break: break-word;
+    line-height: 1.4;
+  }
+
+  /* ── NUEVO: SECCIÓN ADMIN ── */
+  .admin-section {
+    display: none;
+    flex-direction: column;
+    gap: 0;
+    margin-bottom: 16px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .admin-section-header {
+    font-size: 10px;
+    font-family: var(--mono);
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--text-dim);
+    padding: 10px 14px 6px;
+    border-bottom: 1px solid var(--border);
+  }
+  .admin-fields {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 14px;
+  }
+  .admin-field-row {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .admin-field-label {
+    font-size: 10px;
+    font-family: var(--mono);
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: var(--text-dim);
+  }
+  .admin-input {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    padding: 9px 12px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 13px;
+    width: 100%;
+    outline: none;
+    transition: border-color .15s;
+  }
+  .admin-input:focus { border-color: var(--purple-l); }
+  .admin-select {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    padding: 9px 12px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 13px;
+    width: 100%;
+    outline: none;
+    cursor: pointer;
+    transition: border-color .15s;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238b8ba0' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    padding-right: 32px;
+  }
+  .admin-select:focus { border-color: var(--purple-l); }
+  .admin-textarea {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    padding: 9px 12px;
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 13px;
+    width: 100%;
+    outline: none;
+    transition: border-color .15s;
+    resize: vertical;
+    min-height: 72px;
+    line-height: 1.5;
+  }
+  .admin-textarea:focus { border-color: var(--purple-l); }
+  .btn-guardar {
+    background: var(--purple);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 11px 16px;
+    font-family: var(--sans);
+    font-weight: 700;
+    font-size: 13px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: background .15s;
+    width: 100%;
+    margin-top: 4px;
+  }
+  .btn-guardar:hover    { background: var(--purple-l); }
+  .btn-guardar:disabled { opacity: .5; cursor: not-allowed; }
+
   /* ── LOADER GLOBAL ── */
   .loader-overlay {
     display: none;
@@ -507,7 +655,6 @@
         <div class="legend-item"><div class="legend-dot green"></div>Al día</div>
         <div class="legend-item"><div class="legend-dot red"></div>Con deuda</div>
         <div class="legend-item"><div class="legend-dot orange"></div>Pago enviado</div>
-        <div class="legend-item"><div class="legend-dot mora"></div>Mora</div>
       </div>
     </div>
     <div class="pisos-container" id="contenedorPisos"></div>
@@ -557,13 +704,73 @@
         <div id="comprobanteContenido"></div>
       </div>
 
+      <!-- ── NUEVO: DATOS ACTUALES GUARDADOS ── -->
+      <div class="datos-actuales-wrap" id="datosActualesWrap">
+        <div class="datos-actuales-title">Datos registrados</div>
+        <div class="datos-actuales-grid">
+          <div class="dato-item">
+            <span class="dato-name">Pago Total</span>
+            <span class="dato-val" id="dPagoTotal">—</span>
+          </div>
+          <div class="dato-item">
+            <span class="dato-name">Deuda</span>
+            <span class="dato-val" id="dDeuda">—</span>
+          </div>
+          <div class="dato-item">
+            <span class="dato-name">Observaciones</span>
+            <span class="dato-val obs-val" id="dObs">—</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── NUEVO: SECCIÓN ADMIN ── -->
+      <div class="admin-section" id="adminSection">
+        <div class="admin-section-header">Gestión administrativa</div>
+        <div class="admin-fields">
+
+          <div class="admin-field-row">
+            <label class="admin-field-label" for="inputPagoTotal">Pago Total (Bs.)</label>
+            <input class="admin-input" type="number" id="inputPagoTotal" placeholder="0" min="0" step="0.01">
+          </div>
+
+          <div class="admin-field-row">
+            <label class="admin-field-label" for="inputDeuda">Deuda (Bs.)</label>
+            <input class="admin-input" type="number" id="inputDeuda" placeholder="0" min="0" step="0.01">
+          </div>
+
+          <div class="admin-field-row">
+            <label class="admin-field-label" for="selectEstado">Estado</label>
+            <select class="admin-select" id="selectEstado">
+              <option value="Al día">Al día</option>
+              <option value="Con Deuda">Con Deuda</option>
+              <option value="Pago Parcial">Pago Parcial</option>
+              <option value="Mora">Mora</option>
+            </select>
+          </div>
+
+          <div class="admin-field-row">
+            <label class="admin-field-label" for="inputObs">Observaciones</label>
+            <textarea class="admin-textarea" id="inputObs" placeholder="Notas del administrador…"></textarea>
+          </div>
+
+          <button class="btn-guardar" id="btnGuardar" onclick="guardarDatosAdmin()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+            Guardar
+          </button>
+
+        </div>
+      </div>
+      <!-- ── FIN SECCIÓN ADMIN ── -->
+
       <div class="acciones">
 
+        <!-- WhatsApp: solo visible si tiene deuda -->
         <a class="btn-wa" id="btnWa" href="#" target="_blank" rel="noopener" style="display:none">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
           Enviar Recordatorio
         </a>
 
+        <!-- Marcar Al día: solo visible si tiene deuda -->
         <button class="btn-al-dia" id="btnAlDia" onclick="marcarAlDia()">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
           Marcar como Al día
@@ -574,6 +781,7 @@
   </div>
 </div>
 
+<!-- iframe oculto para form POST sin redirección -->
 <iframe name="iframeOculto" style="display:none"></iframe>
 
 <script>
@@ -629,10 +837,7 @@ function renderEdificio() {
       if (!data) {
         btn.classList.add('vacio');
         btn.disabled = true;
-      } else if (data.estadoSheet && data.estadoSheet.trim() === 'Mora') {
-        btn.classList.add('mora');
-        btn.onclick = () => mostrarDetalle(id);
-      } else if (data.estadoSheet && (data.estadoSheet.trim() === 'Con Deuda' || data.estadoSheet.trim() === 'Con deuda')) {
+      } else if (data.estadoSheet && data.estadoSheet.trim() === 'Con deuda') {
         if (data.reciboPago && data.reciboPago.trim() !== '') {
           btn.classList.add('pendiente');
         } else {
@@ -666,24 +871,27 @@ function mostrarDetalle(id) {
   document.getElementById('detallePlaceholder').style.display = 'none';
   document.getElementById('detalleBody').style.display = 'block';
 
-  document.getElementById('dNum').textContent      = id;
-  document.getElementById('dInquilino').textContent = d.inquilino || '—';
+  document.getElementById('dNum').textContent       = id;
+  document.getElementById('dInquilino').textContent  = d.inquilino || '—';
 
-  const estado = d.estadoSheet ? d.estadoSheet.trim() : 'Al día';
-  const esDeudor         = estado === 'Con Deuda' || estado === 'Con deuda';
-  const esMora           = estado === 'Mora';
+  const esDeudor = d.estadoSheet && d.estadoSheet.trim() === 'Con deuda';
   const tieneComprobante = d.reciboPago && d.reciboPago.trim() !== '';
 
+  // Badge: soporte para los 4 estados
   const badge = document.getElementById('dBadge');
-  if (esMora) {
+  const estadoNorm = (d.estadoSheet || '').trim();
+  if (estadoNorm === 'Mora') {
     badge.textContent = 'Mora';
     badge.className   = 'badge badge-mora';
   } else if (esDeudor && tieneComprobante) {
     badge.textContent = 'Pago enviado';
     badge.className   = 'badge badge-orange';
   } else if (esDeudor) {
-    badge.textContent = 'Con Deuda';
+    badge.textContent = 'Con deuda';
     badge.className   = 'badge badge-red';
+  } else if (estadoNorm === 'Pago Parcial') {
+    badge.textContent = 'Pago Parcial';
+    badge.className   = 'badge badge-orange';
   } else {
     badge.textContent = 'Al día';
     badge.className   = 'badge badge-green';
@@ -704,9 +912,8 @@ function mostrarDetalle(id) {
   contenido.innerHTML = '';
 
   if (tieneComprobante) {
-    const url    = d.reciboPago.trim();
-    const esPDF  = url.toLowerCase().includes('.pdf') ||
-                   (url.toLowerCase().includes('/raw/upload/') && url.toLowerCase().endsWith('pdf'));
+    const url = d.reciboPago.trim();
+    const esPDF = url.toLowerCase().includes('.pdf') || url.toLowerCase().includes('/raw/upload/') && url.toLowerCase().endsWith('pdf');
 
     if (esPDF) {
       const a = document.createElement('a');
@@ -734,22 +941,66 @@ function mostrarDetalle(id) {
     wrap.style.display = 'flex';
   }
 
+  // ── NUEVO: DATOS ACTUALES GUARDADOS ─────────────────────────────────────
+  const datosWrap = document.getElementById('datosActualesWrap');
+  const elPagoTotal = document.getElementById('dPagoTotal');
+  const elDeuda     = document.getElementById('dDeuda');
+  const elObs       = document.getElementById('dObs');
+
+  if (d.pagoTotal > 0) {
+    elPagoTotal.textContent = d.pagoTotal + ' Bs.';
+    elPagoTotal.classList.remove('empty');
+  } else {
+    elPagoTotal.textContent = '—';
+    elPagoTotal.classList.add('empty');
+  }
+  if (d.deuda > 0) {
+    elDeuda.textContent = d.deuda + ' Bs.';
+    elDeuda.classList.remove('empty');
+  } else {
+    elDeuda.textContent = '—';
+    elDeuda.classList.add('empty');
+  }
+  if (d.observaciones && d.observaciones.trim() !== '') {
+    elObs.textContent = d.observaciones.trim();
+    elObs.classList.remove('empty');
+  } else {
+    elObs.textContent = '—';
+    elObs.classList.add('empty');
+  }
+  datosWrap.style.display = 'block';
+
+  // ── NUEVO: PRECARGAR SECCIÓN ADMIN ────────────────────────────────────────
+  document.getElementById('inputPagoTotal').value = d.pagoTotal > 0 ? d.pagoTotal : '';
+  document.getElementById('inputDeuda').value     = d.deuda > 0     ? d.deuda     : '';
+  document.getElementById('inputObs').value       = d.observaciones || '';
+
+  const selectEstado = document.getElementById('selectEstado');
+  // Normalizar para que coincida con las opciones del select
+  const estadoParaSelect = estadoNorm || 'Al día';
+  // Intentar encontrar la opción; si no existe, dejar la primera
+  let encontrado = false;
+  for (let i = 0; i < selectEstado.options.length; i++) {
+    if (selectEstado.options[i].value === estadoParaSelect) {
+      selectEstado.selectedIndex = i;
+      encontrado = true;
+      break;
+    }
+  }
+  if (!encontrado) selectEstado.selectedIndex = 0;
+
+  document.getElementById('adminSection').style.display = 'flex';
+  const btnGuardar = document.getElementById('btnGuardar');
+  btnGuardar.disabled = false;
+  btnGuardar.textContent = 'Guardar';
+  btnGuardar.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Guardar';
+
   // ── WhatsApp ────────────────────────────────────────────────────────────
   const btnWa = document.getElementById('btnWa');
-  if (esDeudor || esMora) {
+  if (esDeudor) {
     const fono = (d.fono || '').trim();
     if (fono !== '') {
-      const mensaje =
-        'Estimado/a ' + (d.inquilino || '') + ', le recordamos que tiene una deuda pendiente en el Edificio.' +
-        '\n\nDetalle de cargos:' +
-        '\nAlquiler: '      + (d.alquiler      || 0) + ' Bs.' +
-        '\nMantenimiento: ' + (d.mantenimiento  || 0) + ' Bs.' +
-        '\nLimpieza: '      + (d.limpieza       || 0) + ' Bs.' +
-        '\nSeguridad: '     + (d.seguridad      || 0) + ' Bs.' +
-        '\nAgua: '          + (d.agua           || 0) + ' Bs.' +
-        '\nElectricidad: '  + (d.electricidad   || 0) + ' Bs.' +
-        '\n\nTotal adeudado: ' + (d.totalMora || 0) + ' Bs.' +
-        '\n\nPor favor regularice su situación a la brevedad.';
+      const mensaje = construirMensajeWA(d);
       const urlWa = 'https://wa.me/' + fono + '?text=' + encodeURIComponent(mensaje);
       btnWa.href          = urlWa;
       btnWa.style.display = 'flex';
@@ -768,13 +1019,97 @@ function mostrarDetalle(id) {
 
   // ── BOTÓN MARCAR AL DÍA ─────────────────────────────────────────────────
   const btnAlDia = document.getElementById('btnAlDia');
-  if (esDeudor || esMora) {
-    btnAlDia.style.display = 'flex';
-    btnAlDia.disabled      = false;
-    btnAlDia.textContent   = 'Marcar como Al día';
+  if (esDeudor) {
+    btnAlDia.style.display  = 'flex';
+    btnAlDia.disabled       = false;
+    btnAlDia.textContent    = 'Marcar como Al día';
   } else {
-    btnAlDia.style.display = 'none';
+    btnAlDia.style.display  = 'none';
   }
+}
+
+// ── NUEVO: CONSTRUIR MENSAJE WHATSAPP CON ESTADO, DEUDA Y OBSERVACIONES ──────
+function construirMensajeWA(d) {
+  var estado = (d.estadoSheet || 'Con deuda').trim();
+  var deuda  = d.deuda || 0;
+  var obs    = (d.observaciones || '').trim();
+
+  var msg =
+    'Estimado/a ' + (d.inquilino || '') + ', le recordamos que tiene una deuda pendiente en el Edificio.' +
+    '\n\nDetalle de cargos:' +
+    '\nAlquiler: '      + (d.alquiler      || 0) + ' Bs.' +
+    '\nMantenimiento: ' + (d.mantenimiento  || 0) + ' Bs.' +
+    '\nLimpieza: '      + (d.limpieza       || 0) + ' Bs.' +
+    '\nSeguridad: '     + (d.seguridad      || 0) + ' Bs.' +
+    '\nAgua: '          + (d.agua           || 0) + ' Bs.' +
+    '\nElectricidad: '  + (d.electricidad   || 0) + ' Bs.' +
+    '\n\nTotal acumulado: ' + (d.totalMora || 0) + ' Bs.' +
+    '\n\nEstado: '  + estado;
+
+  if (deuda > 0) {
+    msg += '\nDeuda pendiente: ' + deuda + ' Bs.';
+  }
+
+  if (obs !== '') {
+    msg += '\n\nObservaciones: ' + obs;
+  }
+
+  msg += '\n\nPor favor regularice su situación a la brevedad.';
+  return msg;
+}
+
+// ── NUEVO: GUARDAR DATOS ADMIN ────────────────────────────────────────────────
+function guardarDatosAdmin() {
+  if (!deptoActivo) return;
+
+  const idDepto    = deptoActivo;
+  const pagoTotal  = document.getElementById('inputPagoTotal').value.trim();
+  const deuda      = document.getElementById('inputDeuda').value.trim();
+  const estado     = document.getElementById('selectEstado').value.trim();
+  const obs        = document.getElementById('inputObs').value.trim();
+
+  const btn = document.getElementById('btnGuardar');
+  btn.disabled = true;
+  btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="animation:spin .6s linear infinite"><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"/><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"/><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"/></svg> Guardando…';
+
+  const form = document.createElement('form');
+  form.method = 'POST';
+  form.action = APPS_SCRIPT_URL;
+  form.target = 'iframeOculto';
+
+  const campos = {
+    accion:        'guardarDatosAdmin',
+    departamento:  idDepto,
+    pagoTotal:     pagoTotal,
+    deuda:         deuda,
+    estado:        estado,
+    observaciones: obs
+  };
+
+  Object.keys(campos).forEach(function(name) {
+    const input = document.createElement('input');
+    input.type  = 'hidden';
+    input.name  = name;
+    input.value = campos[name];
+    form.appendChild(input);
+  });
+
+  document.body.appendChild(form);
+  form.submit();
+  document.body.removeChild(form);
+
+  // Actualizar BD local
+  setTimeout(() => {
+    if (BD[idDepto]) {
+      if (pagoTotal !== '') BD[idDepto].pagoTotal     = parseFloat(pagoTotal) || 0;
+      if (deuda     !== '') BD[idDepto].deuda         = parseFloat(deuda)     || 0;
+      if (estado    !== '') BD[idDepto].estadoSheet   = estado;
+      BD[idDepto].observaciones = obs;
+    }
+    renderEdificio();
+    mostrarDetalle(idDepto);
+    mostrarOk('✅ Datos del Depto ' + idDepto + ' guardados correctamente.');
+  }, 1000);
 }
 
 function setConcepto(elId, val) {
@@ -792,10 +1127,10 @@ function setConcepto(elId, val) {
 function marcarAlDia() {
   if (!deptoActivo) return;
 
-  const btn     = document.getElementById('btnAlDia');
+  const btn = document.getElementById('btnAlDia');
   const idDepto = deptoActivo;
-  btn.disabled  = true;
-  btn.textContent = 'Procesando…';
+  btn.disabled = true;
+  btn.textContent = 'Marcar como Al día';
 
   const form = document.createElement('form');
   form.method = 'POST';
