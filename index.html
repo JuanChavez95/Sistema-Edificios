@@ -1073,52 +1073,56 @@ function construirMensajeWA(d) {
 function guardarDatosAdmin() {
   if (!deptoActivo) return;
 
-  const idDepto    = deptoActivo;
-  const pagoTotal  = document.getElementById('inputPagoTotal').value.trim();
-  const deuda      = document.getElementById('inputDeuda').value.trim();
-  const estado     = document.getElementById('selectEstado').value.trim();
-  const obs        = document.getElementById('inputObs').value.trim();
+  const idDepto   = deptoActivo;
+  const pagoTotal = document.getElementById('inputPagoTotal').value.trim();
+  const deuda     = document.getElementById('inputDeuda').value.trim();
+  const estado    = document.getElementById('selectEstado').value.trim();
+  const obs       = document.getElementById('inputObs').value.trim();
 
   const btn = document.getElementById('btnGuardar');
-  btn.disabled = true;
-  btn.innerHTML = 'Guardando…';
+  btn.disabled    = true;
+  btn.textContent = 'Guardando…';
 
-  const params = new URLSearchParams();
-  params.append('accion',         'guardarDatosAdmin');
-  params.append('departamento',   idDepto);
-  params.append('pagoTotal',      pagoTotal);
-  params.append('deuda',          deuda);
-  params.append('estado',         estado);
-  params.append('observaciones',  obs);
+  const form = document.createElement('form');
+  form.method  = 'POST';
+  form.action  = APPS_SCRIPT_URL;
+  form.target  = 'iframeOculto';
+  form.enctype = 'application/x-www-form-urlencoded';
 
-  fetch(APPS_SCRIPT_URL, {
-    method:  'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body:    params.toString()
-  })
-  .then(r => r.json())
-  .then(res => {
-    if (res.ok) {
-      if (BD[idDepto]) {
-        if (pagoTotal !== '') BD[idDepto].pagoTotal      = parseFloat(pagoTotal) || 0;
-        if (deuda     !== '') BD[idDepto].deuda          = parseFloat(deuda)     || 0;
-        if (estado    !== '') BD[idDepto].estadoSheet    = estado;
-        BD[idDepto].observaciones = obs;
-      }
-      renderEdificio();
-      mostrarDetalle(idDepto);
-      mostrarOk('✅ Depto ' + idDepto + ' guardado correctamente.');
-    } else {
-      mostrarError('Error al guardar: ' + (res.error || 'sin detalle'));
-    }
-    btn.disabled = false;
-    btn.innerHTML = 'Guardar';
-  })
-  .catch(err => {
-    mostrarError('No se pudo conectar: ' + err.message);
-    btn.disabled = false;
-    btn.innerHTML = 'Guardar';
+  const campos = {
+    accion:         'guardarDatosAdmin',
+    departamento:   idDepto,
+    pagoTotal:      pagoTotal,
+    deuda:          deuda,
+    estado:         estado,
+    observaciones:  obs
+  };
+
+  Object.entries(campos).forEach(([name, value]) => {
+    const input = document.createElement('input');
+    input.type  = 'hidden';
+    input.name  = name;
+    input.value = value;
+    form.appendChild(input);
   });
+
+  document.body.appendChild(form);
+  form.submit();
+  document.body.removeChild(form);
+
+  setTimeout(() => {
+    if (BD[idDepto]) {
+      if (pagoTotal !== '') BD[idDepto].pagoTotal    = parseFloat(pagoTotal) || 0;
+      if (deuda     !== '') BD[idDepto].deuda        = parseFloat(deuda)     || 0;
+      if (estado    !== '') BD[idDepto].estadoSheet  = estado;
+      BD[idDepto].observaciones = obs;
+    }
+    renderEdificio();
+    mostrarDetalle(idDepto);
+    mostrarOk('✅ Depto ' + idDepto + ' guardado.');
+    btn.disabled    = false;
+    btn.textContent = 'Guardar';
+  }, 1500);
 }
 
 function setConcepto(elId, val) {
