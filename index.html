@@ -151,7 +151,7 @@
     font-size: 1rem;
     color: var(--text);
   }
-  .legend { display: flex; gap: 12px; }
+  .legend { display: flex; gap: 12px; flex-wrap: wrap; }
   .legend-item {
     display: flex; align-items: center; gap: 5px;
     font-size: 11px; color: var(--text-muted);
@@ -161,6 +161,7 @@
   .legend-dot.green  { background: var(--green-l); }
   .legend-dot.red    { background: var(--red-l); }
   .legend-dot.orange { background: #f97316; }
+  .legend-dot.mora   { background: #7f1d1d; }
 
   .pisos-container { padding: 16px 20px; }
 
@@ -199,8 +200,8 @@
   .btn-depto.active { outline: 2px solid #fff; outline-offset: 1px; }
   .btn-depto.al-dia    { background: var(--green); }
   .btn-depto.con-deuda { background: var(--red); }
-  /* Naranja: tiene deuda pero ya subió comprobante pendiente de revisión */
   .btn-depto.pendiente { background: #c2410c; }
+  .btn-depto.mora      { background: #7f1d1d; }
   .btn-depto.vacio     { background: var(--surface2); color: var(--text-dim); cursor: default; }
 
   /* ── PANEL DETALLE ── */
@@ -260,6 +261,7 @@
   .badge-green  { background: #052e16; color: var(--green-l);  border: 1px solid #166534; }
   .badge-red    { background: #450a0a; color: var(--red-l);    border: 1px solid #7f1d1d; }
   .badge-orange { background: #431407; color: #fb923c;         border: 1px solid #9a3412; }
+  .badge-mora   { background: #3b0a0a; color: #fca5a5;         border: 1px solid #7f1d1d; }
 
   .field-group { margin-bottom: 16px; }
   .field-label {
@@ -505,6 +507,7 @@
         <div class="legend-item"><div class="legend-dot green"></div>Al día</div>
         <div class="legend-item"><div class="legend-dot red"></div>Con deuda</div>
         <div class="legend-item"><div class="legend-dot orange"></div>Pago enviado</div>
+        <div class="legend-item"><div class="legend-dot mora"></div>Mora</div>
       </div>
     </div>
     <div class="pisos-container" id="contenedorPisos"></div>
@@ -548,7 +551,7 @@
         <div class="total-val" id="dTotal"></div>
       </div>
 
-      <!-- COMPROBANTE VISOR (solo admin) -->
+      <!-- COMPROBANTE VISOR -->
       <div class="comprobante-wrap" id="comprobanteWrap">
         <div class="comprobante-label">Comprobante de pago</div>
         <div id="comprobanteContenido"></div>
@@ -556,13 +559,11 @@
 
       <div class="acciones">
 
-        <!-- WhatsApp: solo visible si tiene deuda -->
         <a class="btn-wa" id="btnWa" href="#" target="_blank" rel="noopener" style="display:none">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
           Enviar Recordatorio
         </a>
 
-        <!-- Marcar Al día: solo visible si tiene deuda -->
         <button class="btn-al-dia" id="btnAlDia" onclick="marcarAlDia()">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
           Marcar como Al día
@@ -573,7 +574,6 @@
   </div>
 </div>
 
-<!-- iframe oculto para form POST sin redirección -->
 <iframe name="iframeOculto" style="display:none"></iframe>
 
 <script>
@@ -629,8 +629,10 @@ function renderEdificio() {
       if (!data) {
         btn.classList.add('vacio');
         btn.disabled = true;
-      } else if (data.estadoSheet && data.estadoSheet.trim() === 'Con deuda') {
-        // Si tiene comprobante subido → naranja (pago pendiente de revisión)
+      } else if (data.estadoSheet && data.estadoSheet.trim() === 'Mora') {
+        btn.classList.add('mora');
+        btn.onclick = () => mostrarDetalle(id);
+      } else if (data.estadoSheet && (data.estadoSheet.trim() === 'Con Deuda' || data.estadoSheet.trim() === 'Con deuda')) {
         if (data.reciboPago && data.reciboPago.trim() !== '') {
           btn.classList.add('pendiente');
         } else {
@@ -664,19 +666,23 @@ function mostrarDetalle(id) {
   document.getElementById('detallePlaceholder').style.display = 'none';
   document.getElementById('detalleBody').style.display = 'block';
 
-  document.getElementById('dNum').textContent       = id;
-  document.getElementById('dInquilino').textContent  = d.inquilino || '—';
+  document.getElementById('dNum').textContent      = id;
+  document.getElementById('dInquilino').textContent = d.inquilino || '—';
 
-  const esDeudor = d.estadoSheet && d.estadoSheet.trim() === 'Con deuda';
+  const estado = d.estadoSheet ? d.estadoSheet.trim() : 'Al día';
+  const esDeudor         = estado === 'Con Deuda' || estado === 'Con deuda';
+  const esMora           = estado === 'Mora';
   const tieneComprobante = d.reciboPago && d.reciboPago.trim() !== '';
 
-  // Badge: si tiene deuda y ya subió comprobante → "Pago enviado"
   const badge = document.getElementById('dBadge');
-  if (esDeudor && tieneComprobante) {
+  if (esMora) {
+    badge.textContent = 'Mora';
+    badge.className   = 'badge badge-mora';
+  } else if (esDeudor && tieneComprobante) {
     badge.textContent = 'Pago enviado';
     badge.className   = 'badge badge-orange';
   } else if (esDeudor) {
-    badge.textContent = 'Con deuda';
+    badge.textContent = 'Con Deuda';
     badge.className   = 'badge badge-red';
   } else {
     badge.textContent = 'Al día';
@@ -698,11 +704,11 @@ function mostrarDetalle(id) {
   contenido.innerHTML = '';
 
   if (tieneComprobante) {
-    const url = d.reciboPago.trim();
-    const esPDF = url.toLowerCase().includes('.pdf') || url.toLowerCase().includes('/raw/upload/') && url.toLowerCase().endsWith('pdf');
+    const url    = d.reciboPago.trim();
+    const esPDF  = url.toLowerCase().includes('.pdf') ||
+                   (url.toLowerCase().includes('/raw/upload/') && url.toLowerCase().endsWith('pdf'));
 
     if (esPDF) {
-      // PDF: mostrar enlace
       const a = document.createElement('a');
       a.className = 'comprobante-pdf-link';
       a.href      = url;
@@ -711,7 +717,6 @@ function mostrarDetalle(id) {
       a.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> Ver PDF del comprobante';
       contenido.appendChild(a);
     } else {
-      // Imagen: mostrar en visor con lightbox al click
       const img = document.createElement('img');
       img.className = 'comprobante-img';
       img.src       = url;
@@ -722,7 +727,6 @@ function mostrarDetalle(id) {
     }
     wrap.style.display = 'flex';
   } else {
-    // Sin comprobante
     const msg = document.createElement('div');
     msg.className   = 'sin-comprobante';
     msg.textContent = 'Sin comprobante adjunto';
@@ -732,7 +736,7 @@ function mostrarDetalle(id) {
 
   // ── WhatsApp ────────────────────────────────────────────────────────────
   const btnWa = document.getElementById('btnWa');
-  if (esDeudor) {
+  if (esDeudor || esMora) {
     const fono = (d.fono || '').trim();
     if (fono !== '') {
       const mensaje =
@@ -764,13 +768,13 @@ function mostrarDetalle(id) {
 
   // ── BOTÓN MARCAR AL DÍA ─────────────────────────────────────────────────
   const btnAlDia = document.getElementById('btnAlDia');
-    if (esDeudor) {
-    btnAlDia.style.display  = 'flex';
-    btnAlDia.disabled       = false;
-    btnAlDia.textContent    = 'Marcar como Al día';  // ← solo esto
-    } else {
-    btnAlDia.style.display  = 'none';
-    }
+  if (esDeudor || esMora) {
+    btnAlDia.style.display = 'flex';
+    btnAlDia.disabled      = false;
+    btnAlDia.textContent   = 'Marcar como Al día';
+  } else {
+    btnAlDia.style.display = 'none';
+  }
 }
 
 function setConcepto(elId, val) {
@@ -788,10 +792,10 @@ function setConcepto(elId, val) {
 function marcarAlDia() {
   if (!deptoActivo) return;
 
-  const btn = document.getElementById('btnAlDia');
-  const idDepto = deptoActivo; // capturar antes del timeout
-  btn.disabled = true;
-  btn.textContent = 'Marcar como Al día';
+  const btn     = document.getElementById('btnAlDia');
+  const idDepto = deptoActivo;
+  btn.disabled  = true;
+  btn.textContent = 'Procesando…';
 
   const form = document.createElement('form');
   form.method = 'POST';
