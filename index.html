@@ -1144,18 +1144,18 @@ function guardarDatosAdmin() {
   document.body.removeChild(form);
 
   setTimeout(() => {
-    if (BD[idDepto]) {
-      if (pagoTotal !== '') BD[idDepto].pagoTotal    = parseFloat(pagoTotal) || 0;
-      if (deuda     !== '') BD[idDepto].deuda        = parseFloat(deuda)     || 0;
-      if (estado    !== '') BD[idDepto].estadoSheet  = estado;
-      BD[idDepto].observaciones = obs;
-    }
-    renderEdificio();
-    mostrarDetalle(idDepto);
-    mostrarOk('✅ Depto ' + idDepto + ' guardado.');
-    btn.disabled    = false;
-    btn.textContent = 'Guardar';
-  }, 1500);
+  if (BD[idDepto]) {
+    BD[idDepto].pagoTotal      = parseFloat(pagoTotal) || 0;
+    BD[idDepto].deuda          = parseFloat(deuda)     || 0;
+    BD[idDepto].estadoSheet    = estado;
+    BD[idDepto].observaciones  = obs;
+  }
+  renderEdificio();
+  mostrarDetalle(idDepto);
+  mostrarOk('✅ Depto ' + idDepto + ' guardado.');
+  document.getElementById('btnGuardar').disabled    = false;
+  document.getElementById('btnGuardar').textContent = 'Guardar';
+}, 1500);
 }
 
 function setConcepto(elId, val) {
