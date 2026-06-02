@@ -743,11 +743,6 @@
           </div>
 
           <div class="admin-field-row">
-            <label class="admin-field-label" for="inputDeuda">Deuda (Bs.)</label>
-            <input class="admin-input" type="number" id="inputDeuda" placeholder="0" min="0" step="0.01">
-          </div>
-
-          <div class="admin-field-row">
             <label class="admin-field-label" for="selectEstado">Estado</label>
             <select class="admin-select" id="selectEstado">
               <option value="Al día">Al día</option>
@@ -1109,9 +1104,13 @@ function guardarDatosAdmin() {
 
   const idDepto   = deptoActivo;
   const pagoTotal = document.getElementById('inputPagoTotal').value.trim();
-  const deuda     = document.getElementById('inputDeuda').value.trim();
-  const estado    = document.getElementById('selectEstado').value.trim();
-  const obs       = document.getElementById('inputObs').value.trim();
+
+  const total   = parseFloat(BD[deptoActivo].totalMora) || 0;
+  const pagoNum = parseFloat(pagoTotal) || 0;
+  const deuda   = (pagoNum > 0 && pagoNum < total) ? String(total - pagoNum) : '0';
+  const estado  = pagoNum >= total ? 'Al día' : document.getElementById('selectEstado').value.trim();
+
+  const obs = document.getElementById('inputObs').value.trim();
 
   const btn = document.getElementById('btnGuardar');
   btn.disabled    = true;
