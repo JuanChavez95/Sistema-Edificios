@@ -404,6 +404,8 @@
   }
   .btn-al-dia:hover    { background: #15803d; }
   .btn-al-dia:disabled { opacity: .5; cursor: not-allowed; }
+  .btn-depto.pago-parcial { background: #b45309; }
+  .btn-depto.mora         { background: #7e22ce; }
 
   /* ── NUEVO: SECCIÓN DATOS ACTUALES ── */
   .datos-actuales-wrap {
@@ -607,6 +609,8 @@
   ::-webkit-scrollbar { width: 6px; }
   ::-webkit-scrollbar-track { background: var(--bg); }
   ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  .legend-dot.purple { background: #a855f7; }
 </style>
 </head>
 <body>
@@ -653,8 +657,9 @@
       <div class="panel-title">Vista de Departamentos</div>
       <div class="legend">
         <div class="legend-item"><div class="legend-dot green"></div>Al día</div>
-        <div class="legend-item"><div class="legend-dot red"></div>Con deuda</div>
-        <div class="legend-item"><div class="legend-dot orange"></div>Pago enviado</div>
+        <div class="legend-item"><div class="legend-dot orange"></div>Pago Parcial</div>
+        <div class="legend-item"><div class="legend-dot red"></div>Con Deuda</div>
+        <div class="legend-item"><div class="legend-dot purple"></div>Mora</div>
       </div>
     </div>
     <div class="pisos-container" id="contenedorPisos"></div>
@@ -837,15 +842,21 @@ function renderEdificio() {
       if (!data) {
         btn.classList.add('vacio');
         btn.disabled = true;
-      } else if (data.estadoSheet && data.estadoSheet.trim() === 'Con deuda') {
-        if (data.reciboPago && data.reciboPago.trim() !== '') {
-          btn.classList.add('pendiente');
-        } else {
-          btn.classList.add('con-deuda');
-        }
-        btn.onclick = () => mostrarDetalle(id);
       } else {
-        btn.classList.add('al-dia');
+        const est = (data.estadoSheet || '').trim();
+        if (est === 'Mora') {
+          btn.classList.add('mora');
+        } else if (est === 'Con Deuda' || est === 'Con deuda') {
+          if (data.reciboPago && data.reciboPago.trim() !== '') {
+            btn.classList.add('pendiente');
+          } else {
+            btn.classList.add('con-deuda');
+          }
+        } else if (est === 'Pago Parcial') {
+          btn.classList.add('pago-parcial');
+        } else {
+          btn.classList.add('al-dia');
+        }
         btn.onclick = () => mostrarDetalle(id);
       }
 
@@ -1070,46 +1081,44 @@ function guardarDatosAdmin() {
 
   const btn = document.getElementById('btnGuardar');
   btn.disabled = true;
-  btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="animation:spin .6s linear infinite"><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"/><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"/><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"/></svg> Guardando…';
+  btn.innerHTML = 'Guardando…';
 
-  const form = document.createElement('form');
-  form.method = 'POST';
-  form.action = APPS_SCRIPT_URL;
-  form.target = 'iframeOculto';
+  const params = new URLSearchParams();
+  params.append('accion',         'guardarDatosAdmin');
+  params.append('departamento',   idDepto);
+  params.append('pagoTotal',      pagoTotal);
+  params.append('deuda',          deuda);
+  params.append('estado',         estado);
+  params.append('observaciones',  obs);
 
-  const campos = {
-    accion:        'guardarDatosAdmin',
-    departamento:  idDepto,
-    pagoTotal:     pagoTotal,
-    deuda:         deuda,
-    estado:        estado,
-    observaciones: obs
-  };
-
-  Object.keys(campos).forEach(function(name) {
-    const input = document.createElement('input');
-    input.type  = 'hidden';
-    input.name  = name;
-    input.value = campos[name];
-    form.appendChild(input);
-  });
-
-  document.body.appendChild(form);
-  form.submit();
-  document.body.removeChild(form);
-
-  // Actualizar BD local
-  setTimeout(() => {
-    if (BD[idDepto]) {
-      if (pagoTotal !== '') BD[idDepto].pagoTotal     = parseFloat(pagoTotal) || 0;
-      if (deuda     !== '') BD[idDepto].deuda         = parseFloat(deuda)     || 0;
-      if (estado    !== '') BD[idDepto].estadoSheet   = estado;
-      BD[idDepto].observaciones = obs;
+  fetch(APPS_SCRIPT_URL, {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body:    params.toString()
+  })
+  .then(r => r.json())
+  .then(res => {
+    if (res.ok) {
+      if (BD[idDepto]) {
+        if (pagoTotal !== '') BD[idDepto].pagoTotal      = parseFloat(pagoTotal) || 0;
+        if (deuda     !== '') BD[idDepto].deuda          = parseFloat(deuda)     || 0;
+        if (estado    !== '') BD[idDepto].estadoSheet    = estado;
+        BD[idDepto].observaciones = obs;
+      }
+      renderEdificio();
+      mostrarDetalle(idDepto);
+      mostrarOk('✅ Depto ' + idDepto + ' guardado correctamente.');
+    } else {
+      mostrarError('Error al guardar: ' + (res.error || 'sin detalle'));
     }
-    renderEdificio();
-    mostrarDetalle(idDepto);
-    mostrarOk('✅ Datos del Depto ' + idDepto + ' guardados correctamente.');
-  }, 1000);
+    btn.disabled = false;
+    btn.innerHTML = 'Guardar';
+  })
+  .catch(err => {
+    mostrarError('No se pudo conectar: ' + err.message);
+    btn.disabled = false;
+    btn.innerHTML = 'Guardar';
+  });
 }
 
 function setConcepto(elId, val) {
