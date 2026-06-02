@@ -885,7 +885,9 @@ function mostrarDetalle(id) {
   document.getElementById('dNum').textContent       = id;
   document.getElementById('dInquilino').textContent  = d.inquilino || '—';
 
-  const esDeudor = d.estadoSheet && d.estadoSheet.trim() === 'Con deuda';
+  const est = (d.estadoSheet || '').trim();
+  const esDeudor = est === 'Con deuda' || est === 'Con Deuda' || est === 'Pago Parcial' || est === 'Mora';
+
   const tieneComprobante = d.reciboPago && d.reciboPago.trim() !== '';
 
   // Badge: soporte para los 4 estados
