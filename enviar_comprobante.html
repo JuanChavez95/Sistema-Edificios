@@ -6,6 +6,7 @@
   <title>Enviar Comprobante</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
   <style>
     body { background:#121212; color:#f0f0f0; font-family:sans-serif; }
     .card { background:#1e1e1e; border:2px solid #333; }
@@ -36,6 +37,22 @@
     }
     #toast.ok    { background:#0f2a1a; border:1px solid rgba(34,197,94,.3); color:#86efac; }
     #toast.error { background:#2a0f0f; border:1px solid rgba(239,68,68,.3);  color:#fca5a5; }
+
+    .info-pago { background:#1a1a2e; border:1px solid #333; border-radius:8px; padding:.9rem 1rem; margin-bottom:1rem; font-size:.84rem; }
+    .info-pago .row-item { display:flex; justify-content:space-between; padding:.25rem 0; border-bottom:1px solid #2a2a2a; }
+    .info-pago .row-item:last-child { border-bottom:none; }
+    .info-pago .lbl { color:#888; }
+    .info-pago .val { color:#e2e8f0; font-weight:500; }
+    .estado-badge { padding:.2rem .6rem; border-radius:12px; font-size:.78rem; font-weight:600; }
+    .estado-Al-dia       { background:#0f2a1a; color:#86efac; border:1px solid rgba(34,197,94,.3); }
+    .estado-Con-Deuda    { background:#2a0f0f; color:#fca5a5; border:1px solid rgba(239,68,68,.3); }
+    .estado-Pago-Parcial { background:#2a1f00; color:#fcd34d; border:1px solid rgba(251,191,36,.3); }
+    .estado-Mora         { background:#2a0a0a; color:#f87171; border:1px solid rgba(248,113,113,.4); }
+
+    .qr-section { background:#1a1a2e; border:1px solid #333; border-radius:8px; padding:.9rem 1rem; margin-bottom:1rem; text-align:center; }
+    .qr-section .qr-titulo { color:#c4b5fd; font-size:.85rem; font-weight:600; margin-bottom:.6rem; }
+    .qr-section p { color:#888; font-size:.75rem; margin-top:.5rem; margin-bottom:0; }
+    #qr-canvas { display:inline-block; background:#fff; padding:6px; border-radius:6px; }
   </style>
 </head>
 <body>
@@ -53,8 +70,6 @@
   <!-- PASO 1: Verificar -->
   <div class="card p-4 mb-3" id="paso1">
     <h6 style="color:#c4b5fd;" class="mb-3"><i class="bi bi-person-badge me-1"></i>Paso 1 — Verificar identidad</h6>
-
-    <!-- ✅ CAMBIO: Departamento y CI en la misma fila -->
     <div class="row g-3 mb-3">
       <div class="col-5">
         <label class="form-label">Departamento</label>
@@ -67,7 +82,6 @@
         <div id="erCI" style="font-size:.78rem;color:#f87171;display:none;"></div>
       </div>
     </div>
-
     <button class="btn btn-morado w-100" id="btnVerificar" onclick="verificar()">
       <span id="vText"><i class="bi bi-shield-check me-1"></i>Verificar</span>
       <span id="vLoad" style="display:none;"><span class="spinner-border spinner-border-sm me-1"></span>Verificando…</span>
@@ -81,6 +95,43 @@
       Verificado: <strong id="nombreVerificado"></strong> — Depto <strong id="deptoVerificado"></strong>
     </div>
     <h6 style="color:#c4b5fd;" class="mb-3"><i class="bi bi-receipt me-1"></i>Paso 2 — Subir comprobante</h6>
+
+    <!-- Info de cuenta -->
+    <div class="info-pago">
+      <div class="row-item">
+        <span class="lbl"><i class="bi bi-calendar-range me-1"></i>Período de pago</span>
+        <span class="val">15 al 25 de cada mes</span>
+      </div>
+      <div class="row-item">
+        <span class="lbl"><i class="bi bi-circle-fill me-1" style="font-size:.55rem;vertical-align:middle;"></i>Estado</span>
+        <span class="val"><span id="infoEstado" class="estado-badge"></span></span>
+      </div>
+      <div class="row-item">
+        <span class="lbl"><i class="bi bi-cash me-1"></i>Total a pagar</span>
+        <span class="val" id="infoTotal">—</span>
+      </div>
+      <div class="row-item">
+        <span class="lbl"><i class="bi bi-check2-circle me-1"></i>Pago registrado</span>
+        <span class="val" id="infoPagoTotal">—</span>
+      </div>
+      <div class="row-item">
+        <span class="lbl"><i class="bi bi-exclamation-circle me-1"></i>Deuda pendiente</span>
+        <span class="val" id="infoDeuda">—</span>
+      </div>
+      <div class="row-item">
+        <span class="lbl"><i class="bi bi-chat-left-text me-1"></i>Observaciones</span>
+        <span class="val" id="infoObs" style="text-align:right;max-width:60%;">—</span>
+      </div>
+    </div>
+
+    <!-- QR de pago -->
+    <div class="qr-section">
+      <div class="qr-titulo"><i class="bi bi-qr-code me-1"></i>QR de pago</div>
+      <div id="qr-canvas"></div>
+      <p>Escanea para obtener los datos de pago</p>
+    </div>
+
+    <!-- Upload -->
     <div class="mb-3">
       <div class="upload-area" id="uploadArea">
         <input type="file" id="comprobante" accept="image/*,application/pdf" onchange="handleFile(this)">
@@ -112,7 +163,12 @@
   const CLD_URL    = 'https://api.cloudinary.com/v1_1/dpfoul2dc/upload';
   const CLD_PRESET = 'Unsigned';
 
+  // ── Constantes QR (modificar aquí) ────────────────────────────────
+  const QR_NOMBRE  = 'JuanChavez95';
+  const QR_CUENTA  = '12666';
+
   let deptoOk = '', nombreOk = '';
+  let qrGenerado = false;
 
   // ── Paso 1: Verificar ──────────────────────────────────────────────
   async function verificar() {
@@ -130,11 +186,10 @@
       const res = await fetch(GAS_URL);
       data = await res.json();
     } catch(e) {
-      toast('error','❌ Error de conexión con el servidor.'); 
+      toast('error','❌ Error de conexión con el servidor.');
       setLoad('btnVerificar','vText','vLoad', false); return;
     }
 
-    // Buscar fila por departamento (clave del objeto)
     const fila = data[depto] || data[depto.toUpperCase()] ||
       Object.entries(data).find(([k]) => k.toLowerCase() === depto.toLowerCase())?.[1];
 
@@ -143,17 +198,38 @@
       setLoad('btnVerificar','vText','vLoad', false); return;
     }
 
-    // Verificar CI
     if (fila.carnet && fila.carnet !== ci) {
       er('erCI','CI incorrecto.');
       setLoad('btnVerificar','vText','vLoad', false); return;
     }
 
-    // OK
     deptoOk  = depto;
     nombreOk = fila.inquilino || 'Inquilino';
     document.getElementById('nombreVerificado').textContent = nombreOk;
     document.getElementById('deptoVerificado').textContent  = deptoOk;
+
+    // Rellenar info de cuenta
+    const estado = fila.estadoSheet || 'Al día';
+    const badge  = document.getElementById('infoEstado');
+    badge.textContent = estado;
+    badge.className   = 'estado-badge estado-' + estado.replace(/\s+/g, '-');
+
+    document.getElementById('infoTotal').textContent     = fila.totalMora    ? 'Bs ' + fila.totalMora    : '—';
+    document.getElementById('infoPagoTotal').textContent = fila.pagoTotal    ? 'Bs ' + fila.pagoTotal    : '—';
+    document.getElementById('infoDeuda').textContent     = fila.deuda        ? 'Bs ' + fila.deuda        : '—';
+    document.getElementById('infoObs').textContent       = fila.observaciones || '—';
+
+    // Generar QR una sola vez
+    if (!qrGenerado) {
+      const qrTexto = 'Nombre: ' + QR_NOMBRE + ' Cuenta: ' + QR_CUENTA;
+      new QRCode(document.getElementById('qr-canvas'), {
+        text: qrTexto, width: 140, height: 140,
+        colorDark: '#000000', colorLight: '#ffffff',
+        correctLevel: QRCode.CorrectLevel.M
+      });
+      qrGenerado = true;
+    }
+
     setLoad('btnVerificar','vText','vLoad', false);
     document.getElementById('paso1').style.display = 'none';
     document.getElementById('paso2').style.display = '';
@@ -195,7 +271,6 @@
 
     setLoad('btnEnviar','eText','eLoad', true);
 
-    // 1. Subir a Cloudinary
     let urlComprobante;
     try {
       document.getElementById('uploadStatus').textContent = '⏳ Subiendo comprobante…';
@@ -214,7 +289,6 @@
       setLoad('btnEnviar','eText','eLoad', false); return;
     }
 
-    // 2. Enviar al Apps Script via form oculto (sin CORS)
     const form = document.createElement('form');
     form.method = 'POST';
     form.action = GAS_URL;
@@ -228,7 +302,6 @@
     setTimeout(() => {
       setLoad('btnEnviar','eText','eLoad', false);
       toast('ok','✅ Comprobante enviado correctamente. Será revisado por la administración.');
-      // Reset
       document.getElementById('comprobante').value = '';
       document.getElementById('preview-img').style.display = 'none';
       document.getElementById('filenameLabel').style.display = 'none';
